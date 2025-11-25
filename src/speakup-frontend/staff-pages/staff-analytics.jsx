@@ -1,0 +1,517 @@
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query } from 'firebase/firestore';
+import { db } from '../../firebase/firebase';
+import { useAuth } from '../../contexts/authContext';
+import StaffSideBar from './components/StaffSideBar';
+import StaffNavBar from './components/StaffNavBar';
+import { 
+  TrendingUp, Filter, Calendar, BarChart3, 
+  PieChart as PieChartIcon, Download, AlertTriangle, Clock
+} from 'lucide-react';
+import '../../styles/styles-staff/analytics-staff.css';
+
+const StaffAnalytics = () => {
+  const [complaints, setComplaints] = useState([]);
+  const [filteredComplaints, setFilteredComplaints] = useState([]);
+  const [timeRange, setTimeRange] = useState('30d');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [urgencyFilter, setUrgencyFilter] = useState('all');
+  const [timelineFilter, setTimelineFilter] = useState('monthly');
+  const [loading, setLoading] = useState(true);
+  const [staffRole, setStaffRole] = useState(null);
+
+  // Analytics data states
+  const [categoryData, setCategoryData] = useState([]);
+  const [statusData, setStatusData] = useState([]);
+  const [timelineData, setTimelineData] = useState([]);
+  const [urgencyData, setUrgencyData] = useState([]);
+
+  useEffect(() => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      const normalizedRole = storedUser?.role?.toLowerCase() || '';
+      if (normalizedRole === 'staff' || normalizedRole === 'kasama') {
+        setStaffRole(normalizedRole);
+      } else {
+        setStaffRole('');
+      }
+    } catch (error) {
+      console.error('Error determining staff role:', error);
+      setStaffRole('');
+    }
+  }, []);
+
+  // Fetch complaints data
+  useEffect(() => {
+    if (staffRole === null) return;
+
+    const fetchComplaints = async () => {
+      try {
+        const q = query(collection(db, 'complaints'));
+        const snapshot = await getDocs(q);
+
+        const fetchedComplaints = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Filter complaints based on staff role
+        let scopedComplaints = fetchedComplaints;
+        if (staffRole) {
+          scopedComplaints = fetchedComplaints.filter(
+            complaint => (complaint.assignedRole || '').toLowerCase() === staffRole
+          );
+        }
+
+        setComplaints(scopedComplaints);
+        setFilteredComplaints(scopedComplaints);
+      } catch (error) {
+        console.error('Error fetching complaints for analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComplaints();
+  }, [staffRole]);
+
+  // Process analytics data whenever complaints or filters change
+  useEffect(() => {
+    if (complaints.length === 0) return;
+
+    // Apply filters
+    let filtered = complaints;
+
+    // Time range filter
+    const now = new Date();
+    const timeFilterMap = {
+      '7d': new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+      '30d': new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
+      '90d': new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+      '1y': new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000),
+      'all': new Date(0)
+    };
+
+    if (timeRange !== 'all') {
+      filtered = filtered.filter(complaint => {
+        const complaintDate = complaint.submissionDate?.toDate 
+          ? complaint.submissionDate.toDate() 
+          : new Date(complaint.submissionDate);
+        return complaintDate >= timeFilterMap[timeRange];
+      });
+    }
+
+    // Category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(complaint => complaint.category === categoryFilter);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(complaint => complaint.status === statusFilter);
+    }
+
+    // Urgency filter
+    if (urgencyFilter !== 'all') {
+      filtered = filtered.filter(complaint => complaint.urgency === urgencyFilter);
+    }
+
+    setFilteredComplaints(filtered);
+    processAnalyticsData(filtered);
+  }, [complaints, timeRange, categoryFilter, statusFilter, urgencyFilter]);
+
+  const processAnalyticsData = (data) => {
+    const categoryCounts = {};
+    const statusCounts = {};
+    const urgencyCounts = {};
+    const timelineCounts = {};
+
+    data.forEach(complaint => {
+      // Category counts
+      const category = complaint.category || 'Unknown';
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+
+      // Status counts
+      const status = complaint.status || 'Pending';
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+
+      // Urgency counts
+      const urgency = complaint.urgency || 'Medium';
+      urgencyCounts[urgency] = (urgencyCounts[urgency] || 0) + 1;
+
+      // Timeline data based on selected timeline filter
+      const complaintDate = complaint.submissionDate?.toDate 
+        ? complaint.submissionDate.toDate() 
+        : new Date(complaint.submissionDate);
+      
+      let timeKey;
+      switch (timelineFilter) {
+        case 'daily':
+          timeKey = complaintDate.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric'
+          });
+          break;
+        case 'weekly':
+          // Get the start of the week (Sunday)
+          const weekStart = new Date(complaintDate);
+          weekStart.setDate(complaintDate.getDate() - complaintDate.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          timeKey = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          break;
+        case 'monthly':
+          timeKey = complaintDate.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short' 
+          });
+          break;
+        case 'yearly':
+          timeKey = complaintDate.getFullYear().toString();
+          break;
+        default:
+          timeKey = complaintDate.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short' 
+          });
+      }
+      
+      timelineCounts[timeKey] = (timelineCounts[timeKey] || 0) + 1;
+    });
+
+    // Transform data for charts
+    setCategoryData(
+      Object.entries(categoryCounts).map(([name, value]) => ({ name, value }))
+    );
+
+    setStatusData(
+      Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
+    );
+
+    setUrgencyData(
+      Object.entries(urgencyCounts).map(([name, value]) => ({ name, value }))
+    );
+
+    // Sort timeline data based on the filter type
+    const sortedTimelineData = Object.entries(timelineCounts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => {
+        // For daily and monthly, use date comparison
+        if (timelineFilter === 'daily' || timelineFilter === 'monthly') {
+          return new Date(a.name) - new Date(b.name);
+        }
+        // For weekly, parse the date range
+        else if (timelineFilter === 'weekly') {
+          const aStartDate = a.name.split(' - ')[0];
+          const bStartDate = b.name.split(' - ')[0];
+          return new Date(aStartDate) - new Date(bStartDate);
+        }
+        // For yearly, use numeric comparison
+        else if (timelineFilter === 'yearly') {
+          return parseInt(a.name) - parseInt(b.name);
+        }
+        // Default fallback
+        return new Date(a.name) - new Date(b.name);
+      });
+
+    setTimelineData(sortedTimelineData);
+  };
+
+  // Update timeline data when timeline filter changes
+  useEffect(() => {
+    if (filteredComplaints.length > 0) {
+      processAnalyticsData(filteredComplaints);
+    }
+  }, [timelineFilter]);
+
+  // Chart colors
+  const CATEGORY_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
+  const STATUS_COLORS = {
+    'pending': '#f59e0b',
+    'in-progress': '#3b82f6',
+    'in progress': '#3b82f6',
+    'resolved': '#10b981',
+    'closed': '#6b7280'
+  };
+  const URGENCY_COLORS = {
+    'high': '#ef4444',
+    'medium': '#f59e0b',
+    'low': '#10b981'
+  };
+
+  const exportToCSV = () => {
+    const headers = ['ID', 'Category', 'Status', 'College', 'Urgency', 'Submission Date'];
+    const csvData = filteredComplaints.map(complaint => [
+      complaint.id,
+      complaint.category,
+      complaint.status,
+      complaint.college,
+      complaint.urgency,
+      complaint.submissionDate?.toDate ? complaint.submissionDate.toDate().toLocaleDateString() : 'N/A'
+    ]);
+
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `complaints-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Simple bar chart component
+  const SimpleBarChart = ({ data, colors, height = 200 }) => {
+    const maxValue = Math.max(...data.map(item => item.value), 1);
+    
+    return (
+      <div className="simple-bar-chart" style={{ height: `${height}px` }}>
+        {data.map((item, index) => (
+          <div key={item.name} className="bar-item">
+            <div className="bar-label">
+              {timelineFilter === 'weekly' ? (
+                <span className="weekly-label">{item.name}</span>
+              ) : (
+                item.name
+              )}
+            </div>
+            <div className="bar-container">
+              <div 
+                className="bar-fill"
+                style={{
+                  width: `${(item.value / maxValue) * 100}%`,
+                  backgroundColor: colors[index % colors.length]
+                }}
+              ></div>
+              <span className="bar-value">{item.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Simple pie chart component
+  const SimplePieChart = ({ data, colors, height = 200 }) => {
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+    
+    return (
+      <div className="simple-pie-chart" style={{ height: `${height}px` }}>
+        <div className="pie-chart-container">
+          {data.map((item, index) => {
+            const percentage = total > 0 ? (item.value / total) * 100 : 0;
+            return (
+              <div key={item.name} className="pie-item">
+                <div className="pie-color" style={{ backgroundColor: colors[index % colors.length] }}></div>
+                <span className="pie-label">{item.name}</span>
+                <span className="pie-value">{item.value} ({percentage.toFixed(1)}%)</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="staff-analytics-container">
+        <StaffSideBar />
+        <div className="main-content">
+          <StaffNavBar />
+          <div className="loading-spinner">Loading analytics data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="staff-analytics-container">
+      <StaffSideBar />
+      
+      <div className="main-content">
+        <StaffNavBar />
+
+        {/* Header Section */}
+        <div className="analytics-header">
+          <div className="header-content">
+            <h1>Complaints Analytics</h1>
+            <p>Detailed insights and trends analysis for assigned complaints</p>
+          </div>
+          <button className="btn-primary export-btn" onClick={exportToCSV}>
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="analytics-filters">
+          <div className="filter-group">
+            <Calendar size={16} />
+            <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="1y">Last Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <Filter size={16} />
+            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+              <option value="all">All Categories</option>
+              <option value="academic">Academic</option>
+              <option value="faculty-conduct">Faculty Conduct</option>
+              <option value="facilities">Facilities</option>
+              <option value="administrative-student-services">Admin/Student Services</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <BarChart3 size={16} />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          {/* Urgency Filter */}
+          <div className="filter-group">
+            <AlertTriangle size={16} />
+            <select value={urgencyFilter} onChange={(e) => setUrgencyFilter(e.target.value)}>
+              <option value="all">All Urgency</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          {/* Timeline Filter */}
+          <div className="filter-group">
+            <Clock size={16} />
+            <select value={timelineFilter} onChange={(e) => setTimelineFilter(e.target.value)}>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Charts Grid - Adjusted layout */}
+        <div className="charts-grid">
+          {/* Left Column */}
+          <div className="chart-column">
+            {/* Category Distribution */}
+            <div className="chart-card">
+              <div className="chart-header">
+                <h3>Complaints by Category</h3>
+                <PieChartIcon size={18} />
+              </div>
+              <SimplePieChart 
+                data={categoryData} 
+                colors={CATEGORY_COLORS}
+                height={250}
+              />
+            </div>
+
+            {/* Urgency Distribution - Below Category */}
+            <div className="chart-card">
+              <div className="chart-header">
+                <h3>Complaints by Urgency</h3>
+                <AlertTriangle size={18} />
+              </div>
+              <SimplePieChart 
+                data={urgencyData} 
+                colors={urgencyData.map(item => URGENCY_COLORS[item.name.toLowerCase()] || '#6b7280')}
+                height={250}
+              />
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="chart-column">
+            {/* Status Distribution */}
+            <div className="chart-card">
+              <div className="chart-header">
+                <h3>Complaints by Status</h3>
+                <BarChart3 size={18} />
+              </div>
+              <SimpleBarChart 
+                data={statusData} 
+                colors={statusData.map(item => STATUS_COLORS[item.name.toLowerCase()] || '#6b7280')}
+                height={250}
+              />
+            </div>
+
+            {/* Timeline Data - Below Status */}
+            <div className="chart-card">
+              <div className="chart-header">
+                <div className="timeline-header">
+                  <h3>Complaints Timeline</h3>
+                  <span className="timeline-filter-badge">{timelineFilter}</span>
+                </div>
+                <TrendingUp size={18} />
+              </div>
+              <div className="timeline-chart-container">
+                <SimpleBarChart 
+                  data={timelineData} 
+                  colors={['#3b82f6']}
+                  height={timelineFilter === 'weekly' ? 300 : 250}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Summary */}
+        <div className="data-summary">
+          <h3>Analytics Summary</h3>
+          <div className="summary-grid">
+            <div className="summary-item">
+              <span>Total Records Analyzed:</span>
+              <strong>{filteredComplaints.length}</strong>
+            </div>
+            <div className="summary-item">
+              <span>Time Range:</span>
+              <strong>
+                {timeRange === '7d' ? 'Last 7 Days' :
+                 timeRange === '30d' ? 'Last 30 Days' :
+                 timeRange === '90d' ? 'Last 90 Days' :
+                 timeRange === '1y' ? 'Last Year' : 'All Time'}
+              </strong>
+            </div>
+            <div className="summary-item">
+              <span>Categories:</span>
+              <strong>{new Set(filteredComplaints.map(c => c.category)).size}</strong>
+            </div>
+            <div className="summary-item">
+              <span>Status Types:</span>
+              <strong>{new Set(filteredComplaints.map(c => c.status)).size}</strong>
+            </div>
+            <div className="summary-item">
+              <span>Urgency Levels:</span>
+              <strong>{new Set(filteredComplaints.map(c => c.urgency)).size}</strong>
+            </div>
+            <div className="summary-item">
+              <span>Timeline View:</span>
+              <strong className="capitalize">{timelineFilter}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StaffAnalytics;

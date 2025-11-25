@@ -1,0 +1,274 @@
+/* Import Poppins Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Sidebar Container */
+.admin-sidebar-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 260px;
+  background: linear-gradient(180deg, #5C0A0A 0%, #3D0606 100%);
+  border-right: 1px solid rgba(218, 165, 32, 0.15);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  transition: all 0.25s ease;
+  overflow: visible;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Content Wrapper */
+.sidebar-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.75rem 0;
+}
+
+/* Logo Section */
+.logo {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid rgba(218, 165, 32, 0.2);
+  margin-bottom: 1.75rem;
+}
+
+.logo h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #DAA520 0%, #FFD700 50%, #FFFFFF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 0.35rem 0;
+  letter-spacing: 0.5px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.logo p {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar Links */
+.sidebar-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.sidebar-links li {
+  position: relative;
+  padding: 0.875rem 1.5rem;
+  margin: 0.4rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
+  overflow: visible;
+  border: 1px solid transparent;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.2px;
+}
+
+/* Active/Focused Link Styling */
+.sidebar-links li.active {
+  background: rgba(218, 165, 32, 0.12);
+  color: #FFFFFF;
+  border-left: 3px solid #DAA520;
+  box-shadow: 0 2px 8px rgba(218, 165, 32, 0.2);
+  font-weight: 400;
+}
+
+.sidebar-links li.active i {
+  color: #DAA520;
+}
+
+/* Hover State */
+.sidebar-links li:hover {
+  color: #FFFFFF;
+  background: rgba(218, 165, 32, 0.08);
+}
+
+.sidebar-links li:active {
+  opacity: 0.9;
+}
+
+.sidebar-links li i {
+  font-size: 1.125rem;
+  width: 20px;
+  text-align: center;
+  transition: color 0.15s ease;
+  color: rgba(218, 165, 32, 0.8);
+}
+
+.sidebar-links li:hover i {
+  color: #DAA520;
+}
+
+/* Logout Special Styling */
+.sidebar-links li:last-child {
+  margin-top: auto;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(218, 165, 32, 0.25);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-links li:last-child:hover {
+  color: #FFFFFF;
+  border-color: rgba(255, 99, 71, 0.5);
+  background: rgba(255, 99, 71, 0.1);
+  border-left: 3px solid rgba(255, 99, 71, 0.6);
+}
+
+.sidebar-links li:last-child i {
+  color: rgba(255, 160, 122, 0.85);
+}
+
+.sidebar-links li:last-child:hover i {
+  color: #FFA07A;
+}
+
+/* Tablet Responsive (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+  .admin-sidebar-container {
+    width: 220px;
+  }
+
+  .logo h1 {
+    font-size: 1.35rem;
+  }
+
+  .logo p {
+    font-size: 0.7rem;
+  }
+
+  .sidebar-links li {
+    padding: 0.8rem 1.25rem;
+    font-size: 0.825rem;
+  }
+}
+
+/* Mobile Responsive (below 768px) */
+@media screen and (max-width: 768px) {
+  .admin-sidebar-container {
+    width: 70px;
+    background: linear-gradient(180deg, #5C0A0A 0%, #3D0606 100%);
+  }
+
+  .sidebar-content-wrapper {
+    padding: 1.5rem 0;
+  }
+
+  /* Hide text content on mobile */
+  .logo h1,
+  .logo p {
+    display: none;
+  }
+
+  .logo {
+    padding: 0 0 1.5rem;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+  }
+
+  /* Add a compact logo icon */
+  .logo::before {
+    content: '📢';
+    font-size: 1.75rem;
+  }
+
+  .sidebar-links li {
+    padding: 0.875rem;
+    margin: 0.4rem 0.5rem;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .sidebar-links li.active {
+    border-left: none;
+    border: 2px solid #DAA520;
+  }
+
+  .sidebar-links li i {
+    font-size: 1.35rem;
+    margin: 0;
+  }
+
+  .sidebar-links li:hover {
+    background: rgba(218, 165, 32, 0.1);
+  }
+}
+
+/* Expanded state for mobile (optional toggle) */
+.admin-sidebar-container.expanded {
+  width: 260px;
+}
+
+@media screen and (max-width: 768px) {
+  .admin-sidebar-container.expanded .logo h1,
+  .admin-sidebar-container.expanded .logo p {
+    display: block;
+  }
+
+  .admin-sidebar-container.expanded .logo::before {
+    display: none;
+  }
+
+  .admin-sidebar-container.expanded .sidebar-links li {
+    justify-content: flex-start;
+    font-size: 0.875rem;
+  }
+
+  .admin-sidebar-container.expanded .sidebar-links li.active {
+    border-left: 3px solid #DAA520;
+    border: 1px solid transparent;
+    border-left: 3px solid #DAA520;
+  }
+}
+
+/* Extra small devices */
+@media screen and (max-width: 480px) {
+  .admin-sidebar-container {
+    width: 60px;
+  }
+
+  .sidebar-links li {
+    padding: 0.75rem;
+    margin: 0.35rem 0.4rem;
+  }
+
+  .sidebar-links li i {
+    font-size: 1.2rem;
+  }
+}
+
+/* Smooth scrolling for overflow */
+.sidebar-content-wrapper::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar-content-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.sidebar-content-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #DAA520, #B8860B);
+  border-radius: 10px;
+}
+
+.sidebar-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #FFD700, #DAA520);
+}

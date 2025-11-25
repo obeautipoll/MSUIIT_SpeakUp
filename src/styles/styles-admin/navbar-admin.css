@@ -1,0 +1,808 @@
+/* Import Poppins Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Main Navbar Container - Fixed Position with Enhanced Glassmorphism */
+.admin-main-navbar {
+  position: fixed;
+  top: 0;
+  left: 260px; /* Offset for sidebar */
+  right: 0;
+  height: 90px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 250, 240, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(139, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(139, 0, 0, 0.08);
+  z-index: 999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2.5rem;
+  font-family: 'Poppins', sans-serif;
+  transition: all 0.3s ease;
+}
+
+/* Hover Effect for Navbar */
+.admin-main-navbar:hover {
+  box-shadow: 
+    0 4px 28px rgba(139, 0, 0, 0.08),
+    0 12px 48px rgba(0, 0, 0, 0.05);
+}
+
+/* Page Title Group with Enhanced Spacing */
+.admin-page-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.admin-welcome-greeting {
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding-top: 2px;
+  color: #64748b;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.3px;
+  transition: color 0.3s ease;
+  margin-bottom: -10px;
+}
+
+.admin-page-title {
+  font-size: 1.875rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 50%, #FF1744 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.8px;
+  position: relative;
+}
+
+
+
+/* Header Actions Container with Enhanced Layout */
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+ 
+}
+
+/* Primary Button with Enhanced Effects */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, #8B0000 0%, #A52A2A 50%, #DC143C 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 8px 28px rgba(139, 0, 0, 0.35),
+    0 4px 12px rgba(139, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #A00000 0%, #C41E3A 50%, #FF1744 100%);
+}
+
+.btn-primary:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 
+    0 4px 16px rgba(139, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary i {
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.btn-primary:hover i {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Icon Button (Notification Bell) with Enhanced Style */
+.icon-button {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, 
+    rgba(139, 0, 0, 0.08) 0%, 
+    rgba(139, 0, 0, 0.06) 100%);
+  border: 1.5px solid rgba(139, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #8B0000;
+  font-size: 1.3rem;
+  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.08);
+}
+
+.icon-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(139, 0, 0, 0.15) 0%, 
+    rgba(139, 0, 0, 0.12) 100%);
+  transform: translateY(-2px) scale(1.08);
+  border-color: rgba(139, 0, 0, 0.3);
+  box-shadow: 
+    0 6px 20px rgba(139, 0, 0, 0.15),
+    0 2px 8px rgba(139, 0, 0, 0.1);
+}
+
+.icon-button:active {
+  transform: translateY(0) scale(1.02);
+}
+
+.icon-button i {
+  transition: transform 0.3s ease;
+}
+
+.icon-button:hover i {
+  transform: scale(1.15);
+  animation: bellRing 0.5s ease;
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+  20%, 40%, 60%, 80% { transform: rotate(10deg); }
+}
+
+/* Notification Badge with Enhanced Animation */
+.admin-notification-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: linear-gradient(135deg, #FF4444 0%, #DC143C 50%, #C41E3A 100%);
+  color: white;
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 0.10rem 0.25rem;
+  border-radius: 12px;
+  min-width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 2px 12px rgba(255, 68, 68, 0.5);
+  animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 2px 12px rgba(255, 68, 68, 0.5),
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 
+      0 4px 20px rgba(255, 68, 68, 0.7),
+  }
+}
+
+
+/* User Info Container (Clickable Pill) with Enhanced Design */
+.user-info.clickable {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, 
+    rgba(139, 0, 0, 0.06) 0%, 
+    rgba(139, 0, 0, 0.04) 100%);
+  border-radius: 50px;
+  border: 1.5px solid rgba(139, 0, 0, 0.12);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.06);
+}
+
+.user-info.clickable::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50px;
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.1) 0%, 
+    rgba(139, 0, 0, 0.1) 100%);
+  opacity: 0;
+}
+
+
+.user-info.clickable:hover {
+  background: linear-gradient(135deg, 
+    rgba(139, 0, 0, 0.12) 0%, 
+    rgba(139, 0, 0, 0.08) 100%);
+  border-color: rgba(139, 0, 0, 0.25);
+  box-shadow: 
+    0 4px 16px rgba(139, 0, 0, 0.12),
+    0 2px 8px rgba(139, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.user-info.clickable:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Dropdown Arrow with Smooth Transition */
+.dropdown-arrow {
+  font-size: 0.85rem;
+  color: #8B0000;
+  margin-left: 0.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+  color: #DC143C;
+}
+
+/* User Details with Enhanced Typography */
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.user-details .name {
+  font-weight: 600;
+  font-size: 0.975rem;
+  color: #1e293b;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.2px;
+  transition: color 0.3s ease;
+}
+
+.user-info.clickable:hover .user-details .name {
+  color: #8B0000;
+}
+
+.user-details .role {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: color 0.3s ease;
+}
+
+.user-info.clickable:hover .user-details .role {
+  color: #8B0000;
+}
+
+/* Enhanced User Avatar Badge */
+.user-avatar-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+  color: #8B0000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-family: 'Poppins', sans-serif;
+  border: 3px solid white;
+  box-shadow: 
+    0 4px 12px rgba(255, 215, 0, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 0.5);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.user-avatar-badge::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FFD700, #8B0000);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.user-info.clickable:hover .user-avatar-badge {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 6px 20px rgba(255, 215, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 2px 6px rgba(255, 255, 255, 0.6);
+}
+
+.user-info.clickable:hover .user-avatar-badge::after {
+  opacity: 0.15;
+}
+
+/* Dropdown Menu with Enhanced Design */
+.profile-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 220px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  overflow: hidden;
+  list-style: none;
+  padding: 0.5rem 0;
+  margin: 0;
+  animation: dropdownSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dropdown Arrow Indicator */
+.profile-dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 24px;
+  width: 12px;
+  height: 12px;
+  background: white;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Menu Items with Enhanced Interaction */
+.menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.875rem 1.25rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.925rem;
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+  transform: scaleY(0);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-item:hover::before {
+  transform: scaleY(1);
+}
+
+.menu-item i {
+  margin-right: 0.875rem;
+  width: 1.25rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #64748b;
+  transition: all 0.25s ease;
+}
+
+.menu-item:hover {
+  background: linear-gradient(90deg, 
+    rgba(139, 0, 0, 0.06) 0%, 
+    rgba(139, 0, 0, 0.02) 100%);
+  color: #8B0000;
+  padding-left: 1.5rem;
+}
+
+.menu-item:hover i {
+  color: #8B0000;
+  transform: scale(1.15);
+}
+
+.menu-item:active {
+  background: rgba(139, 0, 0, 0.1);
+  transform: scale(0.98);
+}
+
+/* Logout Item with Special Styling */
+.menu-item.logout {
+  color: #DC143C;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: 1rem;
+}
+
+.menu-item.logout i {
+  color: #DC143C;
+}
+
+.menu-item.logout:hover {
+  background: linear-gradient(90deg, 
+    rgba(220, 20, 60, 0.1) 0%, 
+    rgba(220, 20, 60, 0.05) 100%);
+  color: #8B0000;
+}
+
+.menu-item.logout:hover i {
+  color: #8B0000;
+  animation: slideOut 0.4s ease;
+}
+
+@keyframes slideOut {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+/* Tablet Responsive (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+  .main-navbar {
+    left: 240px;
+    padding: 1rem 1.75rem;
+    height: 88px;
+  }
+
+  .page-title {
+    font-size: 1.625rem;
+  }
+
+  .welcome-greeting {
+    font-size: 0.825rem;
+  }
+
+  .btn-primary {
+    padding: 0.75rem 1.35rem;
+    font-size: 0.9rem;
+  }
+
+  .header-actions {
+    gap: 1.25rem;
+  }
+
+  .icon-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .user-avatar-badge {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+}
+
+/* Mobile Responsive (below 768px) */
+@media screen and (max-width: 768px) {
+  .main-navbar {
+    left: 70px;
+    padding: 1rem;
+    height: auto;
+    min-height: 82px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .page-title-group {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-greeting {
+    font-size: 0.775rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.875rem;
+  }
+
+  .btn-primary {
+    padding: 0.75rem;
+    min-width: 48px;
+    justify-content: center;
+  }
+
+  .btn-primary span {
+    display: none;
+  }
+
+  .btn-primary i {
+    margin: 0;
+  }
+
+  .user-info.clickable {
+    padding: 0.5rem 0.875rem;
+  }
+
+  .user-details .role {
+    display: none;
+  }
+
+  .user-details .name {
+    font-size: 0.875rem;
+  }
+
+  .user-avatar-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 0.95rem;
+  }
+
+  .icon-button {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+
+  .profile-dropdown-menu {
+    min-width: 200px;
+  }
+}
+
+/* Extra Small Mobile (below 480px) */
+@media screen and (max-width: 480px) {
+  .main-navbar {
+    left: 60px;
+    padding: 0.875rem;
+  }
+
+  .page-title {
+    font-size: 1.35rem;
+  }
+
+  .welcome-greeting {
+    font-size: 0.725rem;
+  }
+
+  .header-actions {
+    gap: 0.625rem;
+  }
+
+  .user-details .name {
+    font-size: 0.825rem;
+  }
+
+  .icon-button {
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .user-avatar-badge {
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Sidebar Expanded State on Mobile */
+@media screen and (max-width: 768px) {
+  .main-navbar.sidebar-expanded {
+    left: 280px;
+  }
+}
+
+/* ============================================
+   ABOUT INFO MODAL STYLES
+   ============================================ */
+
+/* Modal Backdrop with Blur Effect */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  
+  /* --- MODIFIED: Background is now fully transparent --- */
+  background: transparent; 
+  
+  /* --- KEPT: The blurring effect --- */
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+  
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content Container */
+.modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-top: 500px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* Decorative Top Border */
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #8B0000 0%, #DC143C 50%, #FFD700 100%);
+}
+
+/* Modal Header */
+.modal-content h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 50%, #FF1744 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 1.25rem 0;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.modal-content h3::before {
+  content: '🔊';
+  font-size: 1.5rem;
+  -webkit-text-fill-color: initial;
+}
+
+/* Modal Paragraph */
+.modal-content p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0 0 2rem 0;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+}
+
+/* Modal Close Button */
+.modal-content button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #8B0000 0%, #A52A2A 50%, #DC143C 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 16px rgba(139, 0, 0, 0.25),
+    0 2px 8px rgba(139, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-content button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.modal-content button:hover::before {
+  left: 100%;
+}
+
+.modal-content button:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 24px rgba(139, 0, 0, 0.35),
+    0 4px 12px rgba(139, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #A00000 0%, #C41E3A 50%, #FF1744 100%);
+}
+
+.modal-content button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 4px 14px rgba(139, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content button::after {
+  content: '✕';
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: transform 0.3s ease;
+}
+
+.modal-content button:hover::after {
+  transform: scale(1.2) rotate(90deg);
+}
