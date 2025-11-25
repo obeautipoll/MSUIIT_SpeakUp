@@ -74,6 +74,13 @@ const AdminMonitorComplaints = () => {
   // 🔥 Fetch complaints from Firestore
   useEffect(() => {
     if (staffRole === null) return;
+    const normalizedEmail = (staffEmail || "").trim().toLowerCase();
+    if (!staffRole || !normalizedEmail) {
+      setComplaints([]);
+      setFilteredComplaints([]);
+      return;
+    }
+
     const fetchComplaints = async () => {
       try {
         const q = query(collection(db, "complaints"), orderBy("submissionDate", "desc"));
@@ -84,22 +91,23 @@ const AdminMonitorComplaints = () => {
           ...doc.data(),
         }));
 
-        let scopedComplaints = fetchedComplaints;
-        if (staffRole) {
-          scopedComplaints = fetchedComplaints.filter(
-            (complaint) => (complaint.assignedRole || "").toLowerCase() === staffRole
-          );
-        }
+        let scopedComplaints = fetchedComplaints.filter(
+          (complaint) => (complaint.assignedRole || "").toLowerCase() === staffRole
+        );
+
+        scopedComplaints = scopedComplaints.filter(
+          (complaint) => (complaint.assignedTo || "").toLowerCase() === normalizedEmail
+        );
 
         setComplaints(scopedComplaints);
         setFilteredComplaints(scopedComplaints);
       } catch (error) {
-        console.error("❌ Error fetching complaints:", error);
+        console.error("??O Error fetching complaints:", error);
       }
     };
 
     fetchComplaints();
-  }, [staffRole]);
+  }, [staffRole, staffEmail]);
 
   // 🔎 Filtering logic
   useEffect(() => {
@@ -298,6 +306,7 @@ const AdminMonitorComplaints = () => {
         adminId,
         admin: adminName,
         adminRole: staffRole || "staff",
+        adminEmail: currentUser?.email || "",
         feedback: text,
         date: new Date().toISOString(),
         files: (feedbackFiles || []).map((f) => f?.name || String(f)),
@@ -878,5 +887,4 @@ const getStatusClass = (status) => {
 };
 
 export default AdminMonitorComplaints;
-
 

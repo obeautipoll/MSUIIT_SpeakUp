@@ -12,6 +12,7 @@ const StaffDashboard = () => {
   const { currentUser } = useAuth();
   const [roleLabel, setRoleLabel] = useState('Staff Role');
   const [staffRole, setStaffRole] = useState(null);
+  const [staffEmail, setStaffEmail] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -23,29 +24,58 @@ const StaffDashboard = () => {
 
   useEffect(() => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem('user'));
+      const storedUserRaw = localStorage.getItem('user');
+      const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
+
       if (storedUser?.role) {
         setRoleLabel(storedUser.role);
         setStaffRole(storedUser.role.toLowerCase());
+      } else if (currentUser?.role) {
+        setRoleLabel(currentUser.role);
+        setStaffRole(currentUser.role.toLowerCase());
       } else {
+        setRoleLabel('Staff Role');
         setStaffRole('');
       }
+
+      const resolvedEmail = (storedUser?.email || currentUser?.email || '')
+        .trim()
+        .toLowerCase();
+      setStaffEmail(resolvedEmail);
     } catch (error) {
-      console.error('Failed to parse stored user for role:', error);
+      console.error('Failed to parse stored user for role/email:', error);
+      setRoleLabel('Staff Role');
       setStaffRole('');
+      setStaffEmail('');
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
-    if (staffRole === null) return;
+    if (staffRole === null || staffEmail === null) return;
+
     const fetchComplaintStats = async () => {
+      setIsLoadingStats(true);
+
+      const normalizedEmail = staffEmail.trim().toLowerCase();
+      if (!normalizedEmail) {
+        setStats({ total: 0, pending: 0, inProgress: 0, resolved: 0 });
+        setStatsError('No staff email found. Please re-login.');
+        setIsLoadingStats(false);
+        return;
+      }
+
       try {
         const snapshot = await getDocs(collection(db, 'complaints'));
 
         const filteredDocs = snapshot.docs.filter((doc) => {
-          if (!staffRole) return true;
-          const assignedRole = (doc.data()?.assignedRole || '').toLowerCase();
-          return assignedRole === staffRole;
+          const data = doc.data() || {};
+          const assignedRole = (data.assignedRole || '').toLowerCase().trim();
+          const assignedTo = (data.assignedTo || '').toLowerCase().trim();
+
+          if (staffRole) {
+            return assignedRole === staffRole && assignedTo === normalizedEmail;
+          }
+          return assignedTo === normalizedEmail;
         });
 
         const counts = filteredDocs.reduce(
@@ -88,7 +118,7 @@ const StaffDashboard = () => {
     };
 
     fetchComplaintStats();
-  }, [staffRole]);
+  }, [staffRole, staffEmail]);
 
   const formatStatValue = (value) => (isLoadingStats ? '...' : value);
 

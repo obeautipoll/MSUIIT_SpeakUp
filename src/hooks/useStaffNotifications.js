@@ -43,16 +43,29 @@ export function useStaffNotifications() {
   const prevRef = useRef(new Map());
   const initialLoadRef = useRef(true);
   const [staffRole, setStaffRole] = useState("");
+  const [staffEmail, setStaffEmail] = useState("");
 
   // Determine staff role from localStorage ("staff" or "kasama")
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const role = (user?.role || "").toLowerCase();
-      if (role === "staff" || role === "kasama") setStaffRole(role);
-      else setStaffRole("");
-    } catch { setStaffRole(""); }
-  }, []);
+      const storedRole = (user?.role || "").toLowerCase();
+      if (storedRole === "staff" || storedRole === "kasama") {
+        setStaffRole(storedRole);
+      } else if (currentUser?.role && ["staff", "kasama"].includes(currentUser.role.toLowerCase())) {
+        setStaffRole(currentUser.role.toLowerCase());
+      } else {
+        setStaffRole("");
+      }
+
+      const resolvedEmail =
+        (user?.email || currentUser?.email || "").trim().toLowerCase();
+      setStaffEmail(resolvedEmail);
+    } catch {
+      setStaffRole("");
+      setStaffEmail("");
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     setLoading(true);
@@ -60,7 +73,8 @@ export function useStaffNotifications() {
     prevRef.current = new Map();
     initialLoadRef.current = true;
 
-    if (!staffRole) { setLoading(false); return; }
+    const normalizedEmail = (staffEmail || "").trim().toLowerCase();
+    if (!staffRole || !normalizedEmail) { setLoading(false); return; }
 
     const qRole = query(collection(db, "complaints"), where("assignedRole", "==", staffRole));
     const unsub = onSnapshot(qRole, (snapshot) => {
@@ -80,6 +94,10 @@ export function useStaffNotifications() {
         const initial = [];
         snapshot.docs.forEach((doc) => {
           const d = doc.data() || {};
+          if ((d.assignedTo || "").toLowerCase() !== normalizedEmail) {
+            prevRef.current.delete(doc.id);
+            return;
+          }
           const assignmentMs = toMs(d.assignmentUpdatedAt);
           if (assignmentMs > 0) {
             initial.push({
@@ -149,6 +167,10 @@ export function useStaffNotifications() {
       snapshot.docChanges().forEach((change) => {
         const id = change.doc.id;
         const d = change.doc.data() || {};
+        if ((d.assignedTo || "").toLowerCase() !== normalizedEmail) {
+          prevRef.current.delete(id);
+          return;
+        }
         const prev = prevRef.current.get(id) || { feedbackCount: 0, assignedRole: undefined, feedbackValue: "", status: undefined };
 
         const nowMs = Date.now();
@@ -226,7 +248,7 @@ export function useStaffNotifications() {
     }, () => setLoading(false));
 
     return () => { try { unsub && unsub(); } catch {} };
-  }, [staffRole, currentUser?.uid, currentUser?.email]);
+  }, [staffRole, staffEmail, currentUser?.uid, currentUser?.email]);
 
   const unreadCount = useMemo(() => notifications.reduce((acc,n)=> (n.date>lastSeenAt?acc+1:acc), 0), [notifications, lastSeenAt]);
 
