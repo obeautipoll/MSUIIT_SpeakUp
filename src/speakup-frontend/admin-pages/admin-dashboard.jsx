@@ -18,55 +18,6 @@ const normalizeStatus = (status = '') => {
 
 // --- CHART COMPONENTS ---
 
-// Line Chart: Submission Trend
-const LineChartPlaceholder = ({ data }) => {
-    const maxSubmissions = Math.max(...data.map(item => item.submissions), 1);
-    
-    return (
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6 border border-gray-100 h-full">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
-                <div>
-                    <h3 className="text-xl font-bold text-gray-900">Submission Trend</h3>
-                    <p className="text-sm text-gray-500 mt-1">Last 30 Days Activity</p>
-                </div>
-                <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
-                    <TrendingUp size={18} className="text-green-600" />
-                    <span className="text-sm font-semibold text-green-700">
-                        Total: {data.reduce((sum, item) => sum + item.submissions, 0)}
-                    </span>
-                </div>
-            </div>
-            
-            <div className="h-72 flex items-end justify-between gap-1 border-b-2 border-gray-200 pb-2">
-                {data.slice(-7).map((item, index) => {
-                    const heightPercent = (item.submissions / maxSubmissions) * 100;
-                    return (
-                        <div 
-                            key={index} 
-                            className="flex-1 group relative"
-                        >
-                            <div 
-                                className="w-full bg-gradient-to-t from-indigo-600 to-indigo-400 rounded-t-lg hover:from-indigo-700 hover:to-indigo-500 cursor-pointer shadow-lg"
-                                style={{ height: `${Math.max(heightPercent, 5)}%` }}
-                            >
-                                <div className="opacity-0 group-hover:opacity-100 absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-3 py-1 rounded text-xs whitespace-nowrap shadow-lg z-10">
-                                    {item.submissions} submissions
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-            <div className="flex justify-between mt-3 px-1">
-                {data.slice(-7).map((item, index) => (
-                    <span key={index} className="text-xs text-gray-400 flex-1 text-center">
-                        D{30 - 6 + index}
-                    </span>
-                ))}
-            </div>
-        </div>
-    );
-};
 
 // Donut Chart: Status Distribution
 const DonutChartPlaceholder = ({ stats }) => {
@@ -337,18 +288,20 @@ const AdminDashboard = () => {
                     {/* Avg Resolution Time */}
                     <AvgResolutionTimeCard data={avgResolutionTime} isLoading={isLoading} />
                     
-                    {/* Total Users */}
-                    <div className="bg-gradient-to-br from-pink-50 to-white rounded-2xl shadow-xl p-6 border border-pink-100 hover:shadow-2xl">
+                    {/* Complaints Resolved - Replacement for Total Users */}
+                    <div className="bg-gradient-to-br from-green-50 to-white rounded-2xl shadow-xl p-6 border border-green-100 hover:shadow-2xl">
                         <div className="flex justify-between items-start mb-4">
-                            <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Users</p>
-                            <div className="bg-pink-100 p-3 rounded-xl">
-                                <Users size={24} className="text-pink-600" />
+                            <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Complaints Resolved</p>
+                            <div className="bg-green-100 p-3 rounded-xl">
+                                {/* Using the CheckCircle icon to represent resolution */}
+                                <CheckCircle size={24} className="text-green-600" />
                             </div>
                         </div>
                         <h3 className="text-4xl font-extrabold text-gray-900 mb-2">
-                            {isLoading ? '...' : '500+'}
+                            {/* Use the statusStats.resolved value */}
+                            {isLoading ? '...' : statusStats.resolved}
                         </h3>
-                        <p className="text-sm text-gray-500 font-medium">Registered users</p>
+                        <p className="text-sm text-gray-500 font-medium">Total resolved issues</p>
                     </div>
                 </div>
                 

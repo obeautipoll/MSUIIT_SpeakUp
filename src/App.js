@@ -41,7 +41,6 @@ const ROLE_ROUTE_MAP = {
   kasama: "/sdashboard",
   student: "/dashboard",
 };
-
 const resolveRouteByRole = (role) => ROLE_ROUTE_MAP[role?.toLowerCase()] || "/dashboard";
 
 

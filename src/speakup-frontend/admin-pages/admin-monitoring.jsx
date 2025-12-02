@@ -729,68 +729,69 @@ const AdminMonitorComplaints = () => {
     return date.toLocaleString();
   };
 
-  return (
-    <div className="flex min-h-screen p-5 mt-14">
+   return (
+    <div className="flex min-h-screen4">
       <SideBar />
+
       <AdminNavbar />
 
-      <div className="flex-1 ml-0 p-5 mt-10 lg:px-10 min-h-screen">       
+      <div className="flex-1 mt-24 mx-8 mb-8 p-4 sm:p-6 lg:p-10">      
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-xl shadow-md mb-8 flex gap-5 flex-wrap mx-5">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block font-semibold text-[#800000] mb-2 text-sm">Search:</label>
-            <input
-              type="text"
-              placeholder="Search by ID..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
-            />
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block font-semibold text-[#800000] mb-2 text-sm">Category:</label>
-            <select
-              value={filters.category}
-              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
-            >
-              <option value="all">All</option>
-              <option value="academic">Academic</option>
-              <option value="faculty-conduct">Faculty Conduct</option>
-              <option value="facilities">Facilities</option>
-              <option value="administrative-student-services">Admin/Student Services</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <label className="block font-semibold text-[#800000] mb-2 text-sm">Status:</label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
-            >
-              <option value="all">All</option>
-              {STATUS_OPTIONS.map((statusValue) => (
-                <option key={statusValue} value={statusValue}>
-                  {formatStatusLabel(statusValue)}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-md mb-6 sm:mb-8 flex flex-col sm:flex-row gap-4 sm:gap-5 mx-0 sm:mx-5">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block font-semibold text-[#800000] mb-2 text-sm">Search:</label>
+          <input
+            type="text"
+            placeholder="Search by ID ..."
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm transition-all duration-300 focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
+          />
         </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="block font-semibold text-[#800000] mb-2 text-sm">Category:</label>
+          <select
+            value={filters.category}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+            className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm transition-all duration-300 focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
+          >
+            <option value="all">All</option>
+            <option value="academic">Academic</option>
+            <option value="faculty-conduct">Faculty Conduct</option>
+            <option value="facilities">Facilities</option>
+            <option value="administrative-student-services">Admin/Student Services</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="block font-semibold text-[#800000] mb-2 text-sm">Status:</label>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+            className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm transition-all duration-300 focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+      </div>
 
         {/* Table */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden mb-8 relative">
-          <table className="w-full border-collapse">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 overflow-x-auto mb-4 sm:mb-8 relative">
+          <div className="overflow-x-auto">
+          <table className="w-full border-collapse min-w-[800px]">
             <thead className="bg-gradient-to-r from-[#8B1538]/8 to-[#a94922]/6 border-b-2 border-[#8B1538]/15">
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-[0.85rem] text-[#621313] uppercase tracking-wide">ID</th>
-                <th className="px-6 py-4 text-left font-bold text-[0.85rem] text-[#621313] uppercase tracking-wide">Category</th>
-                <th className="px-6 py-4 text-left font-bold text-[0.85rem] text-[#621313] uppercase tracking-wide">Status</th>
-                <th className="px-6 py-4 text-left font-bold text-[0.85rem] text-[#621313] uppercase tracking-wide">Date</th>
-                <th className="px-6 py-4 text-left font-bold text-[0.85rem] text-[#621313] uppercase tracking-wide">Assigned To</th>
-                <th className="px-6 py-4 text-left font-bold text-[0.85rem] text-[#621313] uppercase tracking-wide">Actions</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-bold text-[0.75rem] sm:text-[0.85rem] text-[#621313] uppercase tracking-wide">ID</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-bold text-[0.75rem] sm:text-[0.85rem] text-[#621313] uppercase tracking-wide">Category</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-bold text-[0.75rem] sm:text-[0.85rem] text-[#621313] uppercase tracking-wide">Status</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-bold text-[0.75rem] sm:text-[0.85rem] text-[#621313] uppercase tracking-wide">Date</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-bold text-[0.75rem] sm:text-[0.85rem] text-[#621313] uppercase tracking-wide">Assigned To</th>
+                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-bold text-[0.75rem] sm:text-[0.85rem] text-[#621313] uppercase tracking-wide">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -808,20 +809,20 @@ const AdminMonitorComplaints = () => {
                   );
                   return (
                     <tr key={c.id} className="hover:bg-[#fef5f5] transition-colors">
-                      <td className="px-3 py-3.5 text-[13px] text-[#333] font-semibold">{c.id}</td>
-                      <td className="px-3 py-3.5 text-[13px] text-[#333]">{getCategoryLabel(c.category)}</td>
-                      <td className="px-3 py-3.5 text-[13px] text-[#333]">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3.5 text-[11px] sm:text-[13px] text-[#333] font-semibold">{c.id}</td>
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3.5 text-[11px] sm:text-[13px] text-[#333]">{getCategoryLabel(c.category)}</td>
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3.5 text-[11px] sm:text-[13px] text-[#333]">
                         <span
-                          className={`inline-block px-3.5 py-1.5 rounded-full text-xs font-semibold capitalize cursor-pointer ${getStatusClass(c.status)}`}
+                          className={`inline-block px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold capitalize cursor-pointer ${getStatusClass(c.status)}`}
                           onClick={() => openModalForStatusChange(c)}
                         >
                           {formatStatusLabel(c.status)}
                         </span>
                       </td>
-                      <td className="px-3 py-3.5 text-[13px] text-[#333]">{formatDateTime(c.submissionDate)}</td>
-                      <td className="px-3 py-3.5 text-[13px] text-[#333]">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3.5 text-[11px] sm:text-[13px] text-[#333]">{formatDateTime(c.submissionDate)}</td>
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3.5 text-[11px] sm:text-[13px] text-[#333]">
                         <select
-                          className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-[13px] bg-white text-[#111827] focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/15"
+                          className="w-full border border-gray-300 rounded-md px-1.5 sm:px-2 py-1 sm:py-1.5 text-[11px] sm:text-[13px] bg-white text-[#111827] focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/15"
                           value={assignmentValue}
                           onChange={(e) => handleAssignSelectionChange(c, e.target.value)}
                         >
@@ -841,9 +842,9 @@ const AdminMonitorComplaints = () => {
                           })}
                         </select>
                       </td>
-                      <td className="px-3 py-3.5 text-[13px] text-[#333]">
+                      <td className="px-2 sm:px-3 py-2.5 sm:py-3.5 text-[11px] sm:text-[13px] text-[#333]">
                         <button
-                          className="bg-[#65b95e] text-white border-none px-3 py-1.5 rounded-[18px] cursor-pointer font-medium text-xs transition-all hover:bg-[#A84700] hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ml-[15px]"
+                          className="bg-[#65b95e] text-white border-none px-2 sm:px-3 py-1 sm:py-1.5 rounded-[18px] cursor-pointer font-medium text-[10px] sm:text-xs transition-all hover:bg-[#A84700] hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ml-1 sm:ml-[15px]"
                           onClick={() => openNoteModal(c)}
                           disabled={!currentUser}
                           title={
@@ -855,7 +856,7 @@ const AdminMonitorComplaints = () => {
                           {getSharedNote(c) ? "Update Note" : "Add Note"}
                         </button>
                         <button
-                          className="bg-[#1094d0] text-white border-none px-3 py-1.5 rounded-[18px] cursor-pointer font-medium text-xs transition-all hover:bg-[#A84700] hover:-translate-y-0.5 hover:shadow-lg ml-2.5"
+                          className="bg-[#1094d0] text-white border-none px-2 sm:px-3 py-1 sm:py-1.5 rounded-[18px] cursor-pointer font-medium text-[10px] sm:text-xs transition-all hover:bg-[#A84700] hover:-translate-y-0.5 hover:shadow-lg ml-1 sm:ml-2.5"
                           onClick={() => openModal(c)}
                           title="View the full complaint details"
                         >
@@ -877,11 +878,11 @@ const AdminMonitorComplaints = () => {
         )}
 
         {showModal && selectedComplaint && (
-          <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1000] p-5 backdrop-blur-sm" onClick={closeModal}>
+          <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1000] p-2 sm:p-5 backdrop-blur-sm" onClick={closeModal}>
             <div className="bg-white rounded-2xl w-full max-w-[900px] max-h-[90vh] flex flex-col shadow-2xl animate-[modalSlideIn_0.3s_ease]" onClick={(e) => e.stopPropagation()}>
-              <div className="px-[30px] py-[25px] border-b-2 border-gray-200 flex justify-between items-start bg-gradient-to-r from-[#800000] to-[#600000] text-white rounded-t-2xl">
+              <div className="px-4 sm:px-[30px] py-4 sm:py-[25px] border-b-2 border-gray-200 flex justify-between items-start bg-gradient-to-r from-[#800000] to-[#600000] text-white rounded-t-2xl">
                 <div>
-                  <h3 className="m-0 text-xl font-bold text-white">Complaint #{selectedComplaint.id}</h3>
+                  <h3 className="m-0 text-lg sm:text-xl font-bold text-white">Complaint #{selectedComplaint.id}</h3>
                   <p className="text-xs mt-1 opacity-90">
                     {
                       getCategoryLabel(selectedComplaint.category)}
@@ -892,11 +893,11 @@ const AdminMonitorComplaints = () => {
                 </button>
               </div>
 
-              <div className="flex bg-[#fafafa] p-0 border-b-2 border-gray-200">
+              <div className="flex bg-[#fafafa] p-0 border-b-2 border-gray-200 overflow-x-auto">
                 {visibleTabs.map((tabKey) => (
                   <button
                     key={tabKey}
-                    className={`flex-1 px-5 py-4 bg-transparent border-none cursor-pointer font-medium text-sm text-[#666] transition-all border-b-[3px] border-transparent hover:bg-gray-100 hover:text-[#800000] ${
+                    className={`flex-1 px-3 sm:px-5 py-3 sm:py-4 bg-transparent border-none cursor-pointer font-medium text-xs sm:text-sm text-[#666] transition-all border-b-[3px] border-transparent hover:bg-gray-100 hover:text-[#800000] whitespace-nowrap ${
                       activeTab === tabKey ? "bg-white text-[#800000] border-b-[#800000] font-semibold" : ""
                     }`}
                     onClick={() => setActiveTab(tabKey)}
@@ -907,28 +908,28 @@ const AdminMonitorComplaints = () => {
                 
               </div>
 
-              <div className="px-[30px] py-5 overflow-y-auto flex-1">
+              <div className="px-4 sm:px-[30px] py-4 sm:py-5 overflow-y-auto flex-1">
                 {visibleTabs.includes("details") && activeTab === "details" && (
                   <div>{renderComplaintDetails()}</div>
                 )}
 
                 {visibleTabs.includes("feedback") && activeTab === "feedback" && (
                   <div>
-                    <h4 className="text-[#800000] text-lg font-semibold m-0 mb-5 pb-2.5 border-b-2 border-gray-200">Feedback History</h4>
+                    <h4 className="text-[#800000] text-base sm:text-lg font-semibold m-0 mb-4 sm:mb-5 pb-2.5 border-b-2 border-gray-200">Feedback History</h4>
                     {!selectedComplaint.feedbackHistory ||
                     selectedComplaint.feedbackHistory.length === 0 ? (
                       <p className="text-center py-10 text-[#999] italic bg-[#fafafa] rounded-lg">No feedback shared yet.</p>
                     ) : (
                       <div className="mb-6">
                         {selectedComplaint.feedbackHistory.map((item, index) => (
-                          <div className="bg-[#fafafa] p-4 rounded-lg mb-3 border-l-4 border-[#800000]" key={`${item.date || index}-${index}`}>
-                            <div className="flex justify-between items-center mb-2.5">
-                              <strong className="text-[#800000] text-sm">{getFeedbackSenderLabel(item)}</strong>
+                          <div className="bg-[#fafafa] p-3 sm:p-4 rounded-lg mb-3 border-l-4 border-[#800000]" key={`${item.date || index}-${index}`}>
+                            <div className="flex justify-between items-center mb-2.5 flex-wrap gap-2">
+                              <strong className="text-[#800000] text-xs sm:text-sm">{getFeedbackSenderLabel(item)}</strong>
                               <span className="text-[#999] text-xs">
                                 {item.date ? formatDateTime(item.date) : "Just now"}
                               </span>
                             </div>
-                            <p className="text-[#333] text-sm m-0 leading-relaxed">{item.feedback}</p>
+                            <p className="text-[#333] text-xs sm:text-sm m-0 leading-relaxed">{item.feedback}</p>
                             {item.files && item.files.length > 0 && (
                               <div className="flex gap-2 flex-wrap mt-2.5">
                                 {item.files.map((file, fileIndex) => (
@@ -943,18 +944,18 @@ const AdminMonitorComplaints = () => {
                       </div>
                     )}
 
-                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200 mt-5">
-                      <h4 className="text-[#800000] text-lg font-semibold m-0 mb-5 pb-2.5 border-b-2 border-gray-200">Send New Feedback</h4>
+                    <div className="bg-white p-4 sm:p-6 rounded-xl border-2 border-gray-200 mt-5">
+                      <h4 className="text-[#800000] text-base sm:text-lg font-semibold m-0 mb-4 sm:mb-5 pb-2.5 border-b-2 border-gray-200">Send New Feedback</h4>
                       <textarea
                         rows="4"
                         placeholder="Write your feedback to the student..."
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
-                        className="w-full px-[18px] py-[15px] border border-[#d0d0d0] rounded-xl text-[15px] text-[#333] resize-vertical shadow-sm transition-all mb-[15px] focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/15"
+                        className="w-full px-3 sm:px-[18px] py-3 sm:py-[15px] border border-[#d0d0d0] rounded-xl text-sm sm:text-[15px] text-[#333] resize-vertical shadow-sm transition-all mb-3 sm:mb-[15px] focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/15"
                       ></textarea>
 
-                      <div className="my-5">
-                        <label className="inline-block px-5 py-2.5 bg-[#fef5f5] text-[#800000] border-2 border-dashed border-[#800000] rounded-lg cursor-pointer font-medium transition-all hover:bg-[#800000] hover:text-white">
+                      <div className="my-4 sm:my-5">
+                        <label className="inline-block px-4 sm:px-5 py-2 sm:py-2.5 bg-[#fef5f5] text-[#800000] border-2 border-dashed border-[#800000] rounded-lg cursor-pointer font-medium text-xs sm:text-sm transition-all hover:bg-[#800000] hover:text-white">
                           <input
                             type="file"
                             multiple
@@ -967,9 +968,9 @@ const AdminMonitorComplaints = () => {
                         {feedbackFiles.length > 0 && (
                           <div className="mt-4 flex flex-wrap gap-2.5">
                             {feedbackFiles.map((file, index) => (
-                              <div className="flex items-center gap-2 px-3 py-2 bg-[#fafafa] border border-gray-200 rounded-md text-[13px]" key={`${file.name}-${index}`}>
-                                <span>{file.name}</span>
-                                <button type="button" onClick={() => handleRemoveFeedbackFile(index)} className="bg-[#800000] text-white border-none rounded-full w-5 h-5 cursor-pointer text-sm leading-none transition-all hover:bg-[#600000] hover:scale-110">
+                              <div className="flex items-center gap-2 px-3 py-2 bg-[#fafafa] border border-gray-200 rounded-md text-xs sm:text-[13px]" key={`${file.name}-${index}`}>
+                                <span className="break-all">{file.name}</span>
+                                <button type="button" onClick={() => handleRemoveFeedbackFile(index)} className="bg-[#800000] text-white border-none rounded-full w-5 h-5 cursor-pointer text-sm leading-none transition-all hover:bg-[#600000] hover:scale-110 flex-shrink-0">
                                   ×
                                 </button>
                               </div>
@@ -978,7 +979,7 @@ const AdminMonitorComplaints = () => {
                         )}
                       </div>
 
-                      <button className="bg-[#800000] text-white border-none px-[18px] py-2.5 rounded-lg cursor-pointer font-normal text-sm transition-all mt-4 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#800000]/30" onClick={handleSendFeedbackPersist}>
+                      <button className="bg-[#800000] text-white border-none px-4 sm:px-[18px] py-2 sm:py-2.5 rounded-lg cursor-pointer font-normal text-xs sm:text-sm transition-all mt-4 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#800000]/30 w-full sm:w-auto" onClick={handleSendFeedbackPersist}>
                         Send Feedback
                       </button>
                     </div>
@@ -987,26 +988,26 @@ const AdminMonitorComplaints = () => {
 
                 {visibleTabs.includes("notes") && activeTab === "notes" && (
                   <div>
-                    <h4 className="text-[#800000] text-lg font-semibold m-0 mb-5 pb-2.5 border-b-2 border-gray-200">Admin Notes (Private)</h4>
+                    <h4 className="text-[#800000] text-base sm:text-lg font-semibold m-0 mb-4 sm:mb-5 pb-2.5 border-b-2 border-gray-200">Admin Notes (Private)</h4>
                     {!selectedComplaint.adminNotes || selectedComplaint.adminNotes.length === 0 ? (
                       <p className="text-center py-10 text-[#999] italic bg-[#fafafa] rounded-lg">No notes have been added.</p>
                     ) : (
                       <div className="mb-6">
                         {selectedComplaint.adminNotes.map((note) => (
-                          <div className="bg-[#f8fafc] border border-gray-300 rounded-xl px-3.5 py-3" key={`${note.adminId}-${note.updatedAt}`}>
-                            <div className="flex justify-between items-center text-xs text-[#475569] mb-1.5">
+                          <div className="bg-[#f8fafc] border border-gray-300 rounded-xl px-3 sm:px-3.5 py-2.5 sm:py-3" key={`${note.adminId}-${note.updatedAt}`}>
+                            <div className="flex justify-between items-center text-xs text-[#475569] mb-1.5 flex-wrap gap-2">
                               <span className="font-medium">
                                 {note.adminName || "Unknown"} -{" "}
                                 {note.adminRole ? note.adminRole.toUpperCase() : "ADMIN"}
                               </span>
                               <span>{formatNoteTimestamp(note.updatedAt)}</span>
                             </div>
-                            <p className="m-0 text-sm text-[#1f2937]">{note.note}</p>
+                            <p className="m-0 text-xs sm:text-sm text-[#1f2937]">{note.note}</p>
                           </div>
                         ))}
                       </div>
                     )}
-                    <button className="bg-[#800000] text-white border-none px-[18px] py-2.5 rounded-lg cursor-pointer font-normal text-sm transition-colors mt-4 hover:bg-[#d1d5db]" onClick={() => openNoteModal(selectedComplaint)}>
+                    <button className="bg-[#800000] text-white border-none px-4 sm:px-[18px] py-2 sm:py-2.5 rounded-lg cursor-pointer font-normal text-xs sm:text-sm transition-colors mt-4 hover:bg-[#d1d5db] w-full sm:w-auto" onClick={() => openNoteModal(selectedComplaint)}>
                       {getSharedNote(selectedComplaint) ? "Update Note" : "Add Note"}
                     </button>
                   </div>
@@ -1014,24 +1015,24 @@ const AdminMonitorComplaints = () => {
 
                 {visibleTabs.includes("assign") && activeTab === "assign" && (
                   <div>
-                    <h4 className="text-[#800000] text-lg font-semibold m-0 mb-5 pb-2.5 border-b-2 border-gray-200">Assignment</h4>
-                    <div className="bg-[#e8f5e9] p-4 rounded-lg mb-5 border-l-4 border-[#4CAF50]">
-                      <p className="m-0 text-[#333] text-sm">
+                    <h4 className="text-[#800000] text-base sm:text-lg font-semibold m-0 mb-4 sm:mb-5 pb-2.5 border-b-2 border-gray-200">Assignment</h4>
+                    <div className="bg-[#e8f5e9] p-3 sm:p-4 rounded-lg mb-5 border-l-4 border-[#4CAF50]">
+                      <p className="m-0 text-[#333] text-xs sm:text-sm">
                         <strong>Assigned Role:</strong> {
                           selectedComplaint.assignedRole
                             ? selectedComplaint.assignedRole.toUpperCase()
                             : "Unassigned"
                         }
                       </p>
-                      <p className="m-0 text-[#333] text-sm mt-2">
+                      <p className="m-0 text-[#333] text-xs sm:text-sm mt-2">
                         <strong>Assigned To:</strong> {selectedComplaint.assignedTo || "Not yet assigned"}
                       </p>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200 mt-5">
-                      <div className="mb-5">
-                        <label className="block font-semibold text-[#800000] mb-2 text-sm">Assign To:</label>
-                        <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10">
+                    <div className="bg-white p-4 sm:p-6 rounded-xl border-2 border-gray-200 mt-5">
+                      <div className="mb-4 sm:mb-5">
+                        <label className="block font-semibold text-[#800000] mb-2 text-xs sm:text-sm">Assign To:</label>
+                        <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-gray-200 rounded-lg text-xs sm:text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10">
                           <option value="">Unassigned</option>
                           {!assignSelectionExists && assignTo && (
                             <option value={assignTo}>{getAssignmentLabelFromValue(assignTo)}</option>
@@ -1047,20 +1048,20 @@ const AdminMonitorComplaints = () => {
                         </select>
                       </div>
 
-                      <div className="mb-5">
-                        <label className="block font-semibold text-[#800000] mb-2 text-sm">Message/Instructions:</label>
+                      <div className="mb-4 sm:mb-5">
+                        <label className="block font-semibold text-[#800000] mb-2 text-xs sm:text-sm">Message/Instructions:</label>
                         <textarea
                           rows="3"
                           placeholder="Add context for the assignee (optional)"
                           value={assignMessage}
                           onChange={(e) => setAssignMessage(e.target.value)}
-                          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm resize-vertical transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-gray-200 rounded-lg text-xs sm:text-sm resize-vertical transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10"
                         ></textarea>
                       </div>
 
-                      {assignmentError && <p className="text-[#b91c1c] text-[13px] mb-3">{assignmentError}</p>}
+                      {assignmentError && <p className="text-[#b91c1c] text-xs sm:text-[13px] mb-3">{assignmentError}</p>}
 
-                      <button className="bg-[#800000] text-white border-none px-[18px] py-2.5 rounded-lg cursor-pointer font-normal text-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#800000]/30" onClick={handleAssignComplaint}>
+                      <button className="bg-[#800000] text-white border-none px-4 sm:px-[18px] py-2 sm:py-2.5 rounded-lg cursor-pointer font-normal text-xs sm:text-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#800000]/30 w-full sm:w-auto" onClick={handleAssignComplaint}>
                         {selectedComplaint.assignedTo ? "Reassign" : "Assign"} Complaint
                       </button>
                     </div>
@@ -1069,21 +1070,21 @@ const AdminMonitorComplaints = () => {
 
                 {visibleTabs.includes("status") && activeTab === "status" && (
                   <div>
-                    <h4 className="text-[#800000] text-lg font-semibold m-0 mb-5 pb-2.5 border-b-2 border-gray-200">Status Management</h4>
+                    <h4 className="text-[#800000] text-base sm:text-lg font-semibold m-0 mb-4 sm:mb-5 pb-2.5 border-b-2 border-gray-200">Status Management</h4>
 
-                    <div className="bg-[#fef5f5] p-5 rounded-lg mb-5 text-center">
-                      <p className="m-0 mb-2.5 text-[#666] font-medium">
+                    <div className="bg-[#fef5f5] p-4 sm:p-5 rounded-lg mb-5 text-center">
+                      <p className="m-0 mb-2.5 text-[#666] font-medium text-xs sm:text-sm">
                         <strong>Current Status:</strong>
                       </p>
-                      <span className={`inline-block px-3.5 py-1.5 rounded-full text-xs font-semibold capitalize ${getStatusClass(selectedComplaint.status)}`}>
+                      <span className={`inline-block px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold capitalize ${getStatusClass(selectedComplaint.status)}`}>
                         {formatStatusLabel(selectedComplaint.status)}
                       </span>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl border-2 border-gray-200 mt-5">
-                      <div className="mb-5">
-                        <label className="block font-semibold text-[#800000] mb-2 text-sm">New Status:</label>
-                        <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10">
+                    <div className="bg-white p-4 sm:p-6 rounded-xl border-2 border-gray-200 mt-5">
+                      <div className="mb-4 sm:mb-5">
+                        <label className="block font-semibold text-[#800000] mb-2 text-xs sm:text-sm">New Status:</label>
+                        <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border-2 border-gray-200 rounded-lg text-xs sm:text-sm transition-all focus:outline-none focus:border-[#800000] focus:ring-4 focus:ring-[#800000]/10">
                           {STATUS_OPTIONS.map((statusValue) => (
                             <option key={statusValue} value={statusValue}>
                               {formatStatusLabel(statusValue)}
@@ -1091,7 +1092,7 @@ const AdminMonitorComplaints = () => {
                           ))}
                         </select>
                       </div>
-                      <button className="bg-[#800000] text-white border-none px-[18px] py-2.5 rounded-lg cursor-pointer font-normal text-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#800000]/30" onClick={() => handleUpdateStatus(newStatus)}>
+                      <button className="bg-[#800000] text-white border-none px-4 sm:px-[18px] py-2 sm:py-2.5 rounded-lg cursor-pointer font-normal text-xs sm:text-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#800000]/30 w-full sm:w-auto" onClick={() => handleUpdateStatus(newStatus)}>
                         Update Status
                       </button>
                     </div>
@@ -1103,50 +1104,54 @@ const AdminMonitorComplaints = () => {
         )}
 
         {noteModalComplaint && (
-          <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1000] p-5 backdrop-blur-sm" onClick={closeNoteModal}>
+          <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[1000] p-2 sm:p-5 backdrop-blur-sm" onClick={closeNoteModal}>
             <div className="bg-white rounded-2xl w-full max-w-[520px] max-h-[90vh] flex flex-col shadow-2xl animate-[modalSlideIn_0.3s_ease]" onClick={(e) => e.stopPropagation()}>
-              <div className="px-[30px] py-[25px] border-b-2 border-gray-200 flex justify-between items-start bg-gradient-to-r from-[#800000] to-[#600000] text-white rounded-t-2xl">
-                <h3 className="m-0 text-xl font-bold text-white">
+              <div className="px-4 sm:px-[30px] py-4 sm:py-[25px] border-b-2 border-gray-200 flex justify-between items-start bg-gradient-to-r from-[#800000] to-[#600000] text-white rounded-t-2xl">
+                <h3 className="m-0 text-lg sm:text-xl font-bold text-white">
                   {getSharedNote(noteModalComplaint) ? "Update" : "Add"} Note - {noteModalComplaint.id}
                 </h3>
-                <button className="text-white w-[30px] h-[30px] cursor-pointer flex items-center justify-center transition-all hover:bg-white/30 hover:rotate-90 hover:rounded-[20px] border-none text-lg" onClick={closeNoteModal}>
+                <button className="text-white w-[30px] h-[30px] cursor-pointer flex items-center justify-center transition-all hover:bg-white/30 hover:rotate-90 hover:rounded-[20px] border-none text-lg flex-shrink-0" onClick={closeNoteModal}>
                   ×
                 </button>
               </div>
-              <div className="px-[30px] py-5 overflow-y-auto flex-1">
+              <div className="px-4 sm:px-[30px] py-4 sm:py-5 overflow-y-auto flex-1">
                 <p className="text-[#6b7280] text-xs mb-3">
                   Notes are shared with admins and the assigned role ({noteRole?.toUpperCase()}).
                 </p>
                 <textarea
-                  className="w-full min-h-[140px] border border-[#d1d5db] rounded-xl px-3.5 py-3 text-sm resize-vertical transition-all focus:border-[#800000] focus:ring-[3px] focus:ring-[#800000]/12 focus:outline-none"
+                  className="w-full min-h-[140px] border border-[#d1d5db] rounded-xl px-3 sm:px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm resize-vertical transition-all focus:border-[#800000] focus:ring-[3px] focus:ring-[#800000]/12 focus:outline-none"
                   placeholder="Write a quick update for this complaint..."
                   value={noteInput}
                   onChange={(e) => setNoteInput(e.target.value)}
                 />
-                {noteError && <p className="text-[#b91c1c] text-[13px] mt-2">{noteError}</p>}
+                {noteError && <p className="text-[#b91c1c] text-xs sm:text-[13px] mt-2">{noteError}</p>}
               </div>
-              <div className="flex justify-end gap-3 px-[30px] py-5 border-t border-gray-200">
-                <button className="bg-[#800000] text-white border-none px-[18px] py-2.5 rounded-lg cursor-pointer font-normal text-sm transition-colors hover:bg-[#d1d5db] disabled:opacity-70 disabled:cursor-not-allowed" onClick={closeNoteModal} disabled={isSavingNote}>
+              <div className="flex justify-end gap-2 sm:gap-3 px-4 sm:px-[30px] py-4 sm:py-5 border-t border-gray-200">
+                <button className="bg-[#800000] text-white border-none px-4 sm:px-[18px] py-2 sm:py-2.5 rounded-lg cursor-pointer font-normal text-xs sm:text-sm transition-colors hover:bg-[#d1d5db] disabled:opacity-70 disabled:cursor-not-allowed" onClick={closeNoteModal} disabled={isSavingNote}>
                   Cancel
                 </button>
                 <button
-                  className="bg-[#800000] text-white border-none px-[18px] py-2.5 rounded-lg cursor-pointer font-normal text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-                  onClick={handleSaveAdminNote}
-                  disabled={isSavingNote}
-                >
-                  {isSavingNote
-                    ? "Saving..."
-                    : getSharedNote(noteModalComplaint)
-                    ? "Update Note"
-                    : "Add Note"}
-                </button>
-              </div>
+                  className="bg-[#800000] text-white border-none px-4 sm:px-[18px] py-2 sm:py-2.5 rounded-lg cursor-pointer font-normal text-xs sm:text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+
+          onClick={handleSaveAdminNote}
+            disabled={isSavingNote}
+            >
+            {isSavingNote
+                  ? "Saving..."
+                  : getSharedNote(noteModalComplaint)
+                  ? "Update Note"
+                 : "Add Note"}
+              </button>
             </div>
           </div>
+
+        </div>
         )}
+     
+      </div>
       </div>
     </div>
-  );
+);
 };
 
 export default AdminMonitorComplaints;

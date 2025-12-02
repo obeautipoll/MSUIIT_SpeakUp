@@ -4,8 +4,9 @@ import { doSignOut } from "../../../firebase/auth";
 
 const AdminSideBar = () => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState('admin'); // default to admin
+  const [isOpen, setIsOpen] = useState(window.innerWidth >= 1024);
+  const toggleSidebar = () => setIsOpen(!isOpen);
+    const [userRole, setUserRole] = useState('admin'); // default to admin
 
   // Get user role from localStorage or context
   useEffect(() => {
@@ -20,25 +21,11 @@ const AdminSideBar = () => {
     }
   }, []);
 
-  // Close sidebar on larger screens
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsOpen(true);
-      } else {
-        setIsOpen(false);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const clearSession = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   };
+
 
   const handleLogout = async () => {
     try {
@@ -139,25 +126,31 @@ const AdminSideBar = () => {
     <>
       {/* Mobile Toggle Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-[100] p-2 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-white hover:bg-black/70 transition-all" // CHANGED z-[60] to z-[100]
-        aria-label="Toggle sidebar"
-      >
-        <i className={`fa-solid ${isOpen ? 'fa-times' : 'fa-bars'} text-xl`}></i>
-      </button>
+        onClick={toggleSidebar}
+        className="lg:hidden mt-3 fixed top-20 left-4 z-[100] p-2 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-white hover:bg-black/70 transition-all"
+        aria-label="Toggle sidebar"
+      >
+        <i className={`fa-solid ${isOpen ? 'fa-times' : 'fa-bars'} text-xl`}></i>
+      </button>
 
       {/* Overlay for mobile */}
       {isOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity"
-          onClick={() => setIsOpen(false)}
+          onClick={toggleSidebar}
         ></div>
       )}
 
       {/* Sidebar */}
       <nav 
-        className={`fixed left-0 top-0 h-screen w-[260px] bg-gradient-to-b ${colors.gradient} border-r ${colors.border} shadow-2xl shadow-black/40 z-50 transition-transform duration-300 ease-in-out overflow-y-auto font-[Poppins] ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`fixed left-0 top-0 h-screen w-[260px] bg-gradient-to-b 
+          ${colors.gradient} border-r ${colors.border} shadow-2xl 
+          shadow-black/40 z-[1000] transition-transform duration-300 
+          ease-in-out overflow-y-auto font-[Poppins] 
+          -translate-x-full
+          lg:translate-x-0
+          ${
+          isOpen ? '!translate-x-0' : ''
         }`}
       >
         <div className="flex flex-col h-full py-7">

@@ -122,11 +122,11 @@ const AdminNavbar = () => {
     return (
         <>
             {/* Main Navbar */}
-            <nav className="fixed top-0 left-0 lg:left-64 right-0 h-20 lg:h-[90px] z-[999] 
-                bg-gradient-to-br from-white/95 to-orange-50/95 backdrop-blur-xl
-                border-b-2 border-red-900/10 shadow-lg shadow-red-900/5
-                transition-all duration-300 hover:shadow-xl hover:shadow-red-900/10 ml-1.5">
-                
+            <nav className="fixed top-0 left-0 lg:left-[260px] right-0 h-20 lg:h-[90px] z-[999] 
+            bg-gradient-to-br from-white/95 to-orange-50/95 backdrop-blur-xl
+            border-b-2 border-blue-900/10 shadow-lg shadow-blue-900/5
+            transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/10">
+
                 <div className="h-full px-4 sm:px-6 lg:px-10 flex items-center justify-between gap-4">
                     
                     {/* Left: Page Title Group */}

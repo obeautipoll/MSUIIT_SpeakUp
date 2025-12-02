@@ -127,11 +127,11 @@ const StaffDashboard = () => {
       <StaffSideBar />
 
       {/* Main Content */}
-      <main className="flex-1 transition-all duration-300 flex flex-col">
+      <main className="flex-1 flex-1 p-4 mt-10 lg:mt-[90px] md:p-6 lg:p-12 transition-all duration-300transition-all duration-300 flex flex-col">
         <StaffNavBar />
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 p-10 pt-24 mt-8">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6 p-4 sm:p-6 lg:p-10 pt-24 sm:mt-0">
           {/* Total Complaints Card */}
           <div className="bg-white p-6 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.1)] flex items-center gap-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
             <div className="w-[60px] h-[60px] rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-[#800000] to-[#993333]">
@@ -191,7 +191,9 @@ const StaffDashboard = () => {
           </p>
         )}
 
-        <UrgentComplaintsWidget />
+        <div className="block w-full min-w-0">
+          <UrgentComplaintsWidget />
+        </div>
       </main>
     </div>
   );
