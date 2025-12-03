@@ -483,19 +483,37 @@ const AdminMonitorComplaints = () => {
 
     try {
       const complaintRef = doc(db, "complaints", selectedComplaint.id);
-      await updateDoc(complaintRef, {
+      
+      // ✅ FIX: Create update object and add dateResolved if status is "Resolved"
+      const updatePayload = {
         status: displayStatus,
         statusUpdatedAt: serverTimestamp(),
-      });
+      };
 
+      if (normalizedNext === "resolved") {
+        updatePayload.dateResolved = serverTimestamp();
+      }
+
+      await updateDoc(complaintRef, updatePayload);
+
+      // Update local state (Optimistic Update)
+      // Note: for dateResolved, we use new Date() locally because serverTimestamp() is an object
       const updatedComplaints = complaints.map((complaint) =>
         complaint.id === selectedComplaint.id
-          ? { ...complaint, status: displayStatus }
+          ? { 
+              ...complaint, 
+              status: displayStatus,
+              ...(normalizedNext === "resolved" ? { dateResolved: new Date() } : {})
+            }
           : complaint
       );
 
       setComplaints(updatedComplaints);
-      setSelectedComplaint({ ...selectedComplaint, status: displayStatus });
+      setSelectedComplaint({ 
+        ...selectedComplaint, 
+        status: displayStatus,
+        ...(normalizedNext === "resolved" ? { dateResolved: new Date() } : {})
+      });
       setNewStatus(normalizedNext);
 
     } catch (error) {

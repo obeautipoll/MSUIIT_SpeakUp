@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^13.5.0",
     "autoprefixer": "^10.4.16",
     "firebase": "^10.14.1",
+    "jspdf": "^3.0.4",
     "lucide-react": "^0.546.0",
     "postcss": "^8.4.33",
     "react": "^18.2.0",

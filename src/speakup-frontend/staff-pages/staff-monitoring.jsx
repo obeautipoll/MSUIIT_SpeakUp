@@ -135,7 +135,7 @@ const AdminMonitorComplaints = () => {
   }, [filters, complaints]);
 
   useEffect(() => {
-    const allowedTabs = modalMode === "view" ? VIEW_TABS : MANAGE_TABS;
+    const allowedTabs = MANAGE_TABS;
     if (!allowedTabs.includes(activeTab)) {
       setActiveTab(allowedTabs[0]);
     }

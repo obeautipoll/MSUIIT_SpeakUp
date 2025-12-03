@@ -45,7 +45,7 @@ export const analyzeComplaintUrgency = async (text) => {
 
   if (hasUrgentWord && score <= -2) urgency = "Critical";  // strong negative + urgent word
   else if (hasUrgentWord) urgency = "High";               // urgent keyword only
-  else if (sentiment === "negative" && score <= -4)
+  else if (sentiment === "negative" && score <= -2)
     urgency = "High";                                     // very negative
 
   // ❗ Return ONLY High or Critical

@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import "../../styles/styles-student/student-complaintHistory.css";
-import { useNavigate, useLocation } from "react-router-dom";
+// Removed: import "../../styles/styles-student/student-complaintHistory.css";
+import { useLocation } from "react-router-dom";
 import SideBar from "./components/SideBar";
 import MainNavbar from "./components/MainNavbar";
 import { db, auth } from "../../firebase/firebase";
 import { collection, query, where, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 
-
 const ComplaintHistory = () => {
-  const navigate = useNavigate();
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +14,37 @@ const ComplaintHistory = () => {
   const location = useLocation();
   const hasAppliedRouteSelection = React.useRef(false);
 
+  // Ref logic for real-time updates
+  const selectedComplaintRef = React.useRef(selectedComplaint);
+
+  useEffect(() => {
+    selectedComplaintRef.current = selectedComplaint;
+  }, [selectedComplaint]);
+
+  // --- Helper Functions ---
+
+  // Enhanced Status Badge Styles
+  const getStatusClasses = (status) => {
+    const s = (status || "pending").toLowerCase();
+    switch (s) {
+      case "resolved":
+      case "completed":
+        return "bg-green-100 text-green-800 border border-green-200";
+      case "in-progress":
+      case "processing":
+        return "bg-orange-100 text-orange-800 border border-orange-200";
+      case "pending":
+        return "bg-blue-50 text-blue-700 border border-blue-200";
+      case "filed":
+        return "bg-purple-100 text-purple-700 border border-purple-200";
+      case "closed":
+      case "rejected":
+      case "cancelled":
+        return "bg-gray-100 text-gray-600 border border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-600 border border-gray-200";
+    }
+  };
 
   // Load jsPDF library
   useEffect(() => {
@@ -24,7 +53,6 @@ const ComplaintHistory = () => {
     script.async = true;
     document.body.appendChild(script);
 
-
     return () => {
       if (document.body.contains(script)) {
         document.body.removeChild(script);
@@ -32,16 +60,14 @@ const ComplaintHistory = () => {
     };
   }, []);
 
-  // Open a specific complaint and tab when navigated from Notifications
+  // Open specific complaint from route
   useEffect(() => {
-    // Only attempt once per route visit
     if (hasAppliedRouteSelection.current) return;
     const state = location?.state || {};
     const targetId = state.complaintId;
     const focusTab = state.focusTab;
     if (!targetId) return;
 
-    // Wait until complaints have been loaded
     const target = complaints.find((c) => c.id === targetId);
     if (target) {
       setSelectedComplaint(target);
@@ -50,106 +76,71 @@ const ComplaintHistory = () => {
     }
   }, [location?.state, complaints]);
 
-
-  // ✨ REAL-TIME UPDATES using onSnapshot
+  // Real-time Updates
   useEffect(() => {
     let unsubscribeSnapshot = null;
 
-
     const setupRealtimeListener = (userId) => {
-      console.log("🔄 Setting up real-time listener for user:", userId);
-     
       const complaintsRef = collection(db, "complaints");
       const q = query(complaintsRef, where("userId", "==", userId));
 
-
-      // onSnapshot provides real-time updates
       unsubscribeSnapshot = onSnapshot(
         q,
         (querySnapshot) => {
-          console.log("📡 Real-time update received at:", new Date().toLocaleTimeString());
-          console.log("✅ Total complaints:", querySnapshot.size);
-
-
           if (querySnapshot.empty) {
-            console.warn("⚠️ No complaints found");
             setComplaints([]);
             setLoading(false);
             return;
           }
 
-
           const complaintList = [];
-         
           querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            console.log(`📌 Processing complaint ${docSnap.id}:`, {
-              status: data.status,
-              dateResolved: data.dateResolved ? data.dateResolved.toDate().toLocaleString() : 'Not resolved'
-            });
-           
             complaintList.push({
               id: docSnap.id,
               ...data,
             });
           });
 
-
-          // Sort by submission date - most recent first
           const sortedComplaints = complaintList.sort((a, b) => {
             const dateA = a.submissionDate ? a.submissionDate.toDate() : new Date(0);
             const dateB = b.submissionDate ? b.submissionDate.toDate() : new Date(0);
             return dateB - dateA;
           });
 
-
           setComplaints(sortedComplaints);
-         
-          // Update selected complaint if it's currently open in modal
-          if (selectedComplaint) {
-            const updatedSelected = sortedComplaints.find(c => c.id === selectedComplaint.id);
+
+          if (selectedComplaintRef.current) {
+            const updatedSelected = sortedComplaints.find(c => c.id === selectedComplaintRef.current.id);
             if (updatedSelected) {
-              console.log("🔄 Updating selected complaint in modal");
               setSelectedComplaint(updatedSelected);
             }
           }
-         
           setLoading(false);
         },
         (error) => {
-          console.error("❌ Real-time listener error:", error);
-          alert("Error loading complaints: " + error.message);
+          console.error("Real-time listener error:", error);
           setLoading(false);
         }
       );
     };
 
-
-    // Wait for auth to be ready
     const unsubscribeAuth = auth.onAuthStateChanged((user) => {
       if (user) {
-        console.log("🔐 User authenticated:", user.uid);
         setupRealtimeListener(user.uid);
       } else {
-        console.log("🚫 No user authenticated");
         setComplaints([]);
         setLoading(false);
       }
     });
 
-
-    // Cleanup function
     return () => {
-      console.log("🧹 Cleaning up listeners");
       unsubscribeAuth();
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
-      }
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
     };
-  }, []); // Only run once on mount
+  }, []);
 
-
-  // Category-specific field configuration
+  // Constants & Formatters
   const CATEGORY_FIELD_CONFIG = {
     academic: [
       { key: "courseTitle", label: "Course / Subject Title" },
@@ -192,24 +183,18 @@ const ComplaintHistory = () => {
     ],
   };
 
-
   const getCategorySpecificDetails = (complaint) => {
     if (!complaint) return [];
-
-
     const fields = CATEGORY_FIELD_CONFIG[complaint.category] || [];
     return fields
       .map(({ key, label, format }) => {
         const rawValue = complaint[key];
-        if (rawValue === undefined || rawValue === null || rawValue === "") {
-          return null;
-        }
+        if (rawValue === undefined || rawValue === null || rawValue === "") return null;
         const value = format ? format(rawValue) : rawValue;
         return { label, value };
       })
       .filter(Boolean);
   };
-
 
   const getCategoryLabel = (category) => {
     const labels = {
@@ -222,7 +207,6 @@ const ComplaintHistory = () => {
     return labels[category] || "N/A";
   };
 
-
   const getDescription = (complaint) => {
     return (
       complaint.concernDescription ||
@@ -234,13 +218,11 @@ const ComplaintHistory = () => {
     );
   };
 
-
   function formatDateTime(date) {
     if (!date) return "N/A";
     const d = date.toDate ? date.toDate() : new Date(date);
     return d.toLocaleString();
   }
-
 
   const formatDate = (date) => {
     if (!date) return "—";
@@ -251,81 +233,40 @@ const ComplaintHistory = () => {
     }
   };
 
-
-  const canDelete = (status) => {
-    // Allow deletion only when status is Pending
-    return (status || "").toLowerCase() === "pending";
-  };
-
+  const canDelete = (status) => (status || "").toLowerCase() === "pending";
 
   const handleDelete = async (complaintId) => {
     const complaint = complaints.find(c => c.id === complaintId);
-   
-    if (!complaint) {
-      alert("Complaint not found");
-      return;
-    }
-
-
-    if (!canDelete(complaint.status)) {
-      alert("Cannot delete complaint. Only complaints with status 'Pending' can be deleted.");
-      return;
-    }
-
+    if (!complaint || !canDelete(complaint.status)) return;
 
     if (window.confirm("Are you sure you want to delete this complaint? This action cannot be undone.")) {
       try {
         await deleteDoc(doc(db, "complaints", complaintId));
-        alert("Complaint deleted successfully");
-        // No need to manually update state - onSnapshot will handle it
       } catch (error) {
-        console.error("Error deleting complaint:", error);
         alert("Failed to delete complaint: " + error.message);
       }
     }
   };
 
-
-  // 📎 Get all attachments from multiple possible fields
   const getAttachments = (complaint) => {
     const attachments = [];
-   
-    // Check attachments array
-    if (Array.isArray(complaint.attachments) && complaint.attachments.length) {
-      attachments.push(...complaint.attachments);
-    }
-   
-    // Check single attachment fields
-    if (complaint.attachment) {
-      attachments.push(complaint.attachment);
-    }
-   
-    if (complaint.attachmentUrl) {
-      attachments.push(complaint.attachmentUrl);
-    }
-   
-    if (complaint.attachmentURL) {
-      attachments.push(complaint.attachmentURL);
-    }
-   
-    if (complaint.file) {
-      attachments.push(complaint.file);
-    }
-   
+    if (Array.isArray(complaint.attachments) && complaint.attachments.length) attachments.push(...complaint.attachments);
+    if (complaint.attachment) attachments.push(complaint.attachment);
+    if (complaint.attachmentUrl) attachments.push(complaint.attachmentUrl);
+    if (complaint.attachmentURL) attachments.push(complaint.attachmentURL);
+    if (complaint.file) attachments.push(complaint.file);
     return attachments;
   };
 
-
+  // --- PDF GENERATION (Matching the Image Format) ---
   const generatePDF = (complaint) => {
     try {
       const { jsPDF } = window.jspdf || {};
-     
       if (!jsPDF) {
         alert('PDF library is loading. Please try again in a moment.');
         return null;
       }
-
-
+      
       const doc = new jsPDF('p', 'mm', 'a4');
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
@@ -333,20 +274,18 @@ const ComplaintHistory = () => {
       const contentWidth = pageWidth - (margin * 2);
       let yPos = margin;
 
-
-      // Header
+      // Header (Maroon-Primary: #800020 -> [128, 0, 32]) matches image_53915b.png
       doc.setFillColor(128, 0, 32);
       doc.rect(0, 0, pageWidth, 35, 'F');
-     
+
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(20);
       doc.setFont('helvetica', 'bold');
       doc.text('MSU-IIT SpeakUp', pageWidth / 2, 15, { align: 'center' });
-     
+
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text('Complaint Management System', pageWidth / 2, 25, { align: 'center' });
-
 
       // Document Title
       yPos = 50;
@@ -355,21 +294,18 @@ const ComplaintHistory = () => {
       doc.setFont('helvetica', 'bold');
       doc.text('COMPLAINT REPORT', pageWidth / 2, yPos, { align: 'center' });
 
-
       // Info Grid Background
       yPos = 65;
-      doc.setFillColor(249, 249, 249);
+      doc.setFillColor(249, 249, 249); // Light Gray
       doc.rect(margin, yPos, contentWidth, 60, 'F');
       doc.setDrawColor(221, 221, 221);
       doc.rect(margin, yPos, contentWidth, 60, 'S');
-
 
       // Info Grid Content
       yPos += 10;
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(128, 0, 32);
-
+      doc.setTextColor(128, 0, 32); 
 
       // Left Column
       doc.text('DOCUMENT ID', margin + 5, yPos);
@@ -377,7 +313,6 @@ const ComplaintHistory = () => {
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
       doc.text(complaint.id, margin + 5, yPos + 5);
-
 
       yPos += 15;
       doc.setFontSize(9);
@@ -389,7 +324,6 @@ const ComplaintHistory = () => {
       doc.setFontSize(10);
       doc.text(getCategoryLabel(complaint.category), margin + 5, yPos + 5);
 
-
       yPos += 15;
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
@@ -399,7 +333,6 @@ const ComplaintHistory = () => {
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
       doc.text(complaint.status || 'Pending', margin + 5, yPos + 5);
-
 
       // Right Column
       yPos = 75;
@@ -412,7 +345,6 @@ const ComplaintHistory = () => {
       doc.setFontSize(10);
       doc.text(new Date().toLocaleDateString(), pageWidth / 2 + 5, yPos + 5);
 
-
       yPos += 15;
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
@@ -422,7 +354,6 @@ const ComplaintHistory = () => {
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
       doc.text(formatDate(complaint.submissionDate), pageWidth / 2 + 5, yPos + 5);
-
 
       yPos += 15;
       doc.setFontSize(9);
@@ -434,30 +365,27 @@ const ComplaintHistory = () => {
       doc.setFontSize(10);
       doc.text(formatDate(complaint.dateResolved) || '—', pageWidth / 2 + 5, yPos + 5);
 
-
       // Complaint Description Section
       yPos = 135;
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(128, 0, 32);
       doc.text('COMPLAINT DESCRIPTION', margin, yPos);
-     
+
       doc.setDrawColor(128, 0, 32);
       doc.setLineWidth(0.5);
       doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
-
 
       yPos += 10;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-     
+
       const description = getDescription(complaint);
       const splitDescription = doc.splitTextToSize(description, contentWidth - 10);
       doc.text(splitDescription, margin + 5, yPos);
 
-
-      // Attachments if exist
+      // Attachments (if any)
       const attachments = getAttachments(complaint);
       if (attachments.length > 0) {
         yPos += (splitDescription.length * 5) + 15;
@@ -465,10 +393,8 @@ const ComplaintHistory = () => {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(128, 0, 32);
         doc.text('ATTACHED DOCUMENTS', margin, yPos);
-       
-        doc.setDrawColor(128, 0, 32);
         doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
-       
+
         yPos += 8;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
@@ -480,102 +406,76 @@ const ComplaintHistory = () => {
         });
       }
 
-
       // Footer
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text('This is an official document generated from MSU-IIT SpeakUp Complaint Management System.', pageWidth / 2, pageHeight - 20, { align: 'center' });
       doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth / 2, pageHeight - 15, { align: 'center' });
 
-
       return doc;
-     
     } catch (error) {
-      console.error('PDF generation error:', error);
-      alert('Failed to generate PDF. Please try again.');
+      console.error('PDF error', error);
       return null;
     }
   };
 
-
   const handlePrint = () => {
     if (!selectedComplaint) return;
-   
     const doc = generatePDF(selectedComplaint);
-    if (doc) {
-      const pdfBlob = doc.output('blob');
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      const printWindow = window.open(pdfUrl);
-     
-      if (printWindow) {
-        printWindow.onload = () => {
-          printWindow.print();
-        };
-      }
-    }
+    if (doc) window.open(URL.createObjectURL(doc.output('blob'))).print();
   };
-
 
   const handleDownload = () => {
     if (!selectedComplaint) return;
-   
     const doc = generatePDF(selectedComplaint);
-    if (doc) {
-      doc.save(`complaint_${selectedComplaint.id}_${Date.now()}.pdf`);
-    }
+    if (doc) doc.save(`complaint_${selectedComplaint.id}.pdf`);
   };
 
-
-  // 📋 Render Details Tab with Category-Specific Fields
+  // Render Functions
   const renderDetailsTab = () => {
-    if (!selectedComplaint) return null;
-
-
     const categoryDetails = getCategorySpecificDetails(selectedComplaint);
     const attachments = getAttachments(selectedComplaint);
 
-
     return (
-      <div className="tab-content-area">
-        <div className="detail-section">
-          <h4>{getCategoryLabel(selectedComplaint.category)} Details</h4>
+      <div className="flex flex-col gap-6 animate-fadeIn">
+        <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+          <h4 className="text-gray-800 text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">
+            {getCategoryLabel(selectedComplaint.category)} Details
+          </h4>
           {categoryDetails.length > 0 ? (
-            <div className="detail-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               {categoryDetails.map((info, index) => (
-                <div className="detail-item" key={`${info.label}-${index}`}>
-                  <strong>{info.label}:</strong>
-                  <span>{info.value}</span>
+                <div className="flex flex-col gap-1" key={index}>
+                  <span className="text-xs font-semibold text-gray-500 uppercase">{info.label}</span>
+                  <span className="text-sm text-gray-900 font-medium">{info.value}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="empty-message">No specific details were provided for this category.</p>
+            <p className="text-gray-500 text-sm">No specific details provided.</p>
           )}
         </div>
 
-
         {attachments.length > 0 && (
-          <div className="detail-section">
-            <h4>Attachments ({attachments.length})</h4>
-            <div className="attachments-list">
+          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+            <h4 className="text-gray-800 text-sm font-bold uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">
+              Attachments ({attachments.length})
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {attachments.map((file, index) => {
-                const label = typeof file === "string" ? file : file?.name || file?.fileName || `Attachment ${index + 1}`;
-                const url = typeof file === "string" ? file : file?.url || file?.downloadURL;
-
-
+                const label = typeof file === "string" ? file : file?.name || `Attachment ${index + 1}`;
+                const url = typeof file === "string" ? file : file?.url;
                 return (
-                  <div className="attachment-item" key={`attachment-${index}`}>
-                    <div className="attachment-info">
-                      <i className="fas fa-file-pdf file-icon"></i>
-                      <div>
-                        <div style={{ fontWeight: 500, color: 'var(--gray-900)' }}>
-                          {label}
-                        </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors" key={index}>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <i className="fas fa-file-alt text-[#800020] text-sm"></i>
                       </div>
+                      <span className="text-sm font-medium text-gray-700 truncate">{label}</span>
                     </div>
                     {url && (
-                      <a className="btn-link" href={url} target="_blank" rel="noreferrer">
-                        <i className="fas fa-external-link-alt"></i> Open
+                      <a href={url} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-[#800020] px-2">
+                        <i className="fas fa-external-link-alt text-xs"></i>
                       </a>
                     )}
                   </div>
@@ -588,219 +488,256 @@ const ComplaintHistory = () => {
     );
   };
 
-
-  // 💬 Render Feedback Tab
   const renderFeedbackTab = () => {
-    if (!selectedComplaint) return null;
-
-
     const feedbackHistory = selectedComplaint.feedbackHistory || [];
-
-
     return (
-      <div className="tab-content-area">
-        <h4>Admin Feedback</h4>
+      <div className="space-y-4">
+        <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Communication History</h4>
         {feedbackHistory.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-inbox" style={{ fontSize: '48px', color: 'var(--gray-400)', marginBottom: '16px' }}></i>
-            <p>No feedback received yet</p>
-            <p style={{ fontSize: '12px', color: 'var(--gray-600)', marginTop: '8px' }}>
-              Admin feedback will appear here once your complaint is reviewed
-            </p>
+          <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i className="fas fa-comments text-gray-400 text-lg"></i>
+            </div>
+            <p className="text-sm text-gray-500">No feedback received from administrators yet.</p>
           </div>
         ) : (
-          <div className="feedback-history">
-            {feedbackHistory.map((item, index) => (
-              <div className="feedback-item" key={`feedback-${index}`}>
-                <div className="feedback-header">
-                  <div className="feedback-author">
-                    <i className="fas fa-user-shield"></i>
+          feedbackHistory.map((item, index) => (
+            <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm" key={index}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#800020] text-white flex items-center justify-center text-xs font-bold">
+                    AD
                   </div>
-                  <span className="feedback-date">
-                    <i className="fas fa-clock"></i>
-                    {item.date ? formatDateTime(item.date) : "Recent"}
-                  </span>
-                </div>
-                <div className="feedback-content">
-                  <p>{item.feedback}</p>
-                </div>
-                {item.files && item.files.length > 0 && (
-                  <div className="feedback-files">
-                    <p style={{ fontSize: '11px', fontWeight: 600, marginBottom: '8px', color: 'var(--gray-600)' }}>
-                      <i className="fas fa-paperclip"></i> Attached Files:
-                    </p>
-                    <div className="file-tags">
-                      {item.files.map((file, fileIndex) => (
-                        <span className="file-tag" key={`file-${fileIndex}`}>
-                          <i className="fas fa-file"></i>
-                          {typeof file === 'string' ? file : file.name || `File ${fileIndex + 1}`}
-                        </span>
-                      ))}
-                    </div>
+                  <div>
+                    <span className="block text-sm font-bold text-gray-900">Admin Response</span>
+                    <span className="block text-xs text-gray-500">{item.date ? formatDateTime(item.date) : "Recently"}</span>
                   </div>
-                )}
+                </div>
               </div>
-            ))}
-          </div>
+              <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-md">{item.feedback}</p>
+              {item.files?.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {item.files.map((f, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs text-gray-600 border border-gray-200">
+                      <i className="fas fa-paperclip text-[10px]"></i> {typeof f === 'string' ? f : f.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
     );
   };
 
-
   return (
-    <div id="historyPage" className="container">
-      <SideBar />
+    <div id="historyPage" className="min-h-screen bg-gray-50 flex">
+  <SideBar />
 
-
-      <div className="main-content">
-        <MainNavbar />
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">All Submitted Complaints</div>
+  <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+    <MainNavbar />
+    
+    {/* Scrollable Main Content - Existing Padding Top kept */}
+    <div className="flex-1 overflow-y-auto p-4 md:p-24 pt-24 lg:pt-[120px]">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Main Complaint History Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Card Header (No changes needed here) */}
+          <div className="bg-white px-6 py-5 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#800020]"></div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 tracking-tight">Complaint History</h2>
+              <p className="text-xs text-gray-500 mt-1">View and track the status of your submitted concerns.</p>
+            </div>
           </div>
 
-
-          <table className="complain-table">
-            <thead>
-              <tr>
-                <th style={{ width: "45%" }}>Complaint</th>
-                <th style={{ width: "20%" }}>Category</th>
-                <th style={{ width: "15%" }}>Date Filed</th>
-                <th style={{ width: "12%" }}>Status</th>
-                <th style={{ width: "8%" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="empty-state">
-                    <i className="fas fa-spinner fa-spin"></i>
-                    <p>Loading complaints...</p>
-                  </td>
+          {/* Enhanced Table - Font size decreased for mobile */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/80 border-b border-gray-200">
+                  {/* --- MODIFIED TABLE HEADERS --- */}
+                  <th className="
+                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[40%]
+                    sm:px-6 sm:py-4 sm:text-sm // Revert to larger size on sm/md screens
+                  ">Complaint</th>
+                  
+                  <th className="
+                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[20%]
+                    sm:px-6 sm:py-4 sm:text-sm
+                  ">Category</th>
+                  
+                  <th className="
+                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[15%]
+                    sm:px-6 sm:py-4 sm:text-sm
+                  ">Date Filed</th>
+                  
+                  <th className="
+                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[15%]
+                    sm:px-6 sm:py-4 sm:text-sm
+                  ">Status</th>
+                  
+                  <th className="
+                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right w-[10%]
+                    sm:px-6 sm:py-4 sm:text-sm
+                  ">Actions</th>
+                  {/* ----------------------------- */}
                 </tr>
-              ) : complaints.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="empty-state">
-                    <i className="fas fa-inbox"></i>
-                    <p>No complaints found</p>
-                  </td>
-                </tr>
-              ) : (
-                complaints.map((c) => (
-                  <tr key={c.id}>
-                    <td className="complaint-desc">{getDescription(c)}</td>
-                    <td>{getCategoryLabel(c.category)}</td>
-                    <td>{formatDate(c.submissionDate)}</td>
-                    <td>
-                      <span className={`status ${(c.status || "pending").toLowerCase()}`}>
-                        {c.status || "Pending"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="icon-btn btn-view"
-                          onClick={() => {
-                            setSelectedComplaint(c);
-                            setActiveTab("details");
-                          }}
-                          title="View Details"
-                        >
-                          <i className="fas fa-eye"></i>
-                        </button>
-                        <button
-                          className={`icon-btn btn-delete ${!canDelete(c.status) ? "disabled" : ""}`}
-                          onClick={() => handleDelete(c.id)}
-                          title={canDelete(c.status) ? "Delete Complaint" : "Cannot delete unless status is Pending"}
-                          disabled={!canDelete(c.status)}
-                        >
-                          <i className="fas fa-trash-alt"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+              </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {loading ? (
+                      <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500 text-sm">Loading...</td></tr>
+                    ) : complaints.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="px-6 py-16 text-center">
+                          <p className="text-gray-900 font-medium text-sm">No complaints found</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      complaints.map((c) => (
+                        <tr key={c.id} className="hover:bg-gray-50 transition-colors duration-150 group">
+                          <td className="px-6 py-4 align-middle">
+                            {/* Changed text-xs to text-sm */}
+                            <div className="text-sm font-medium text-gray-900 line-clamp-2 leading-relaxed max-w-md" title={getDescription(c)}>
+                              {getDescription(c)}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 align-middle">
+                            {/* Changed text-xs to text-sm */}
+                            <span className="text-sm text-gray-700">{getCategoryLabel(c.category)}</span>
+                          </td>
+                          <td className="px-6 py-4 align-middle text-sm text-gray-600">
+                            {formatDate(c.submissionDate)}
+                          </td>
+                          <td className="px-6 py-4 align-middle">
+                            {/* Bumped badge size from 10px to text-xs (12px) */}
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${getStatusClasses(c.status)}`}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-70"></span>
+                              {c.status || "Pending"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 align-middle text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => { setSelectedComplaint(c); setActiveTab("details"); }}
+                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#800020] hover:bg-red-50 transition-colors rounded"
+                                title="View Details"
+                              >
+                                <i className="fas fa-eye text-sm"></i>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(c.id)}
+                                disabled={!canDelete(c.status)}
+                                className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
+                                  canDelete(c.status) ? "text-gray-400 hover:text-red-600 hover:bg-red-50" : "text-gray-200 cursor-not-allowed"
+                                }`}
+                                title={canDelete(c.status) ? "Delete" : "Locked"}
+                              >
+                                <i className="fas fa-trash-alt text-sm"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
 
-
-        {/* Modal */}
+        {/* Enhanced Modal */}
         {selectedComplaint && (
-          <div className="modal" onClick={() => setSelectedComplaint(null)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Complaint Details</h2>
-                <div className="ch-modal-actions">
-                  <button className="ch-action-btn" onClick={handleDownload}>
-                    <i className="fas fa-download"></i>
-                    Download
-                  </button>
-                  <button className="ch-action-btn" onClick={handlePrint}>
-                    <i className="fas fa-print"></i>
-                    Print
-                  </button>
-                  <button className="close-btn" onClick={() => setSelectedComplaint(null)}>
-                    ×
-                  </button>
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex justify-center items-center z-[2000] p-4 animate-fadeIn"
+            onClick={() => setSelectedComplaint(null)}>
+            <div
+              className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden transform transition-all scale-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="bg-white px-6 py-4 border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Complaint Details</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">ID: {selectedComplaint.id}</p>
+                </div>
+                <div className="flex gap-2">
+                   <div className="flex bg-gray-100 rounded-lg p-1">
+                      <button 
+                        onClick={handleDownload} 
+                        className="px-3 py-2 hover:bg-white hover:shadow-sm rounded-md text-gray-600 transition-all flex items-center gap-2 text-xs font-medium"
+                        title="Download PDF"
+                      >
+                        <i className="fas fa-download"></i> Download
+                      </button>
+                      <button 
+                        onClick={handlePrint} 
+                        className="px-3 py-2 hover:bg-white hover:shadow-sm rounded-md text-gray-600 transition-all flex items-center gap-2 text-xs font-medium"
+                        title="Print"
+                      >
+                        <i className="fas fa-print"></i> Print
+                      </button>
+                   </div>
+                   <button 
+                    onClick={() => setSelectedComplaint(null)}
+                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-[#800020] hover:bg-[#800020] hover:text-white transition-colors ml-2"
+                   >
+                    <i className="fas fa-times"></i>
+                   </button>
                 </div>
               </div>
 
-
-              {/* Tab Navigation */}
-              <div className="modal-tabs">
+              {/* Modal Navigation */}
+              <div className="flex border-b border-gray-200 bg-gray-50/50 px-6">
                 <button
-                  className={`tab-btn ${activeTab === "details" ? "active" : ""}`}
+                  className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                    activeTab === "details" ? "border-[#800020] text-[#800020]" : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
                   onClick={() => setActiveTab("details")}
                 >
-                  <i className="fas fa-info-circle"></i> Details
+                  Overview
                 </button>
                 <button
-                  className={`tab-btn ${activeTab === "feedback" ? "active" : ""}`}
+                  className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors flex items-center gap-2 ${
+                    activeTab === "feedback" ? "border-[#800020] text-[#800020]" : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
                   onClick={() => setActiveTab("feedback")}
                 >
-                  <i className="fas fa-comments"></i> Feedback
-                  {selectedComplaint.feedbackHistory && selectedComplaint.feedbackHistory.length > 0 && (
-                    <span className="badge">{selectedComplaint.feedbackHistory.length}</span>
+                  Feedback
+                  {selectedComplaint.feedbackHistory?.length > 0 && (
+                    <span className="bg-[#800020] text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                      {selectedComplaint.feedbackHistory.length}
+                    </span>
                   )}
                 </button>
               </div>
 
-
-              <div className="modal-body">
-                {/* Summary Grid */}
-                <div className="complaint-details-grid">
-                  <div className="detail-item">
-                    <div className="detail-label">Complaint Category</div>
-                    <div className="detail-value">{getCategoryLabel(selectedComplaint.category)}</div>
+              {/* Modal Content */}
+              <div className="p-6 overflow-y-auto bg-gray-50/30 flex-1">
+                {/* Status Bar */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block mb-1">Status</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${getStatusClasses(selectedComplaint.status)}`}>
+                       {selectedComplaint.status || "Pending"}
+                    </span>
                   </div>
-                 
-                  <div className="detail-item">
-                    <div className="detail-label">Date Filed</div>
-                    <div className="detail-value">{formatDate(selectedComplaint.submissionDate)}</div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block mb-1">Date Filed</span>
+                    <span className="text-xs font-semibold text-gray-900">{formatDate(selectedComplaint.submissionDate)}</span>
                   </div>
-                 
-                  <div className="detail-item">
-                    <div className="detail-label">Complaint Status</div>
-                    <div className="detail-value">
-                      <span className={`status ${(selectedComplaint.status || "pending").toLowerCase()}`}>
-                        {selectedComplaint.status || "Pending"}
-                      </span>
-                    </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block mb-1">Category</span>
+                    <span className="text-xs font-semibold text-gray-900">{getCategoryLabel(selectedComplaint.category)}</span>
                   </div>
-                 
-                  <div className="detail-item">
-                    <div className="detail-label">Date Resolved</div>
-                    <div className="detail-value">
-                      {formatDate(selectedComplaint.dateResolved) || "—"}
-                    </div>
+                   <div>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider block mb-1">Resolved</span>
+                    <span className="text-xs font-semibold text-gray-900">{formatDate(selectedComplaint.dateResolved) || "—"}</span>
                   </div>
                 </div>
 
-
-                {/* Tab Content */}
                 {activeTab === "details" && renderDetailsTab()}
                 {activeTab === "feedback" && renderFeedbackTab()}
               </div>
@@ -812,6 +749,4 @@ const ComplaintHistory = () => {
   );
 };
 
-
 export default ComplaintHistory;
-

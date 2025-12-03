@@ -133,6 +133,7 @@ const AdminAnalytics = () => {
   const [error, setError] = useState(null);
   const [trendRange, setTrendRange] = useState('week');
   const [activeTrendPeriod, setActiveTrendPeriod] = useState(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const printRef = useRef(null);
 
   useEffect(() => {
@@ -276,129 +277,518 @@ const AdminAnalytics = () => {
     );
   }, [activeTrendPeriod, selectedTrendSeries]);
 
-  const handlePrint = () => {
-    window.print();
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+      parseInt(result[1], 16),
+      parseInt(result[2], 16),
+      parseInt(result[3], 16)
+    ] : [0, 0, 0];
+  };
+
+  const generatePDF = async (action = 'download') => {
+    if (isGeneratingPDF) return;
+    
+    setIsGeneratingPDF(true);
+    
+    try {
+      const jsPDFModule = await import('jspdf');
+      const jsPDF = jsPDFModule.default;
+      
+      // Create PDF document
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // Add header to first page
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(24);
+      pdf.setTextColor(17, 24, 39); // #111827
+      pdf.text('Analytics Report', 105, 20, { align: 'center' });
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128); // #6b7280
+      pdf.text(`Generated on ${new Date().toLocaleString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`, 105, 30, { align: 'center' });
+      
+      // Add summary stats (Page 1)
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(16);
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Summary Statistics', 20, 45);
+      
+      let yPos = 55;
+      
+      // Summary cards
+      const summaries = [
+        { label: 'Total Complaints', value: totalComplaints, subtitle: 'All time' },
+        { label: 'Active Queue', value: openComplaints, subtitle: 'Pending + In Progress' },
+        { label: 'Weekly Volume', value: resolvedThisWeek, subtitle: 'Submissions (last 7 days)' },
+        { label: 'Avg. per Day', value: avgPerDay, subtitle: 'Based on last 7 days' },
+      ];
+      
+      summaries.forEach((item, index) => {
+        const xPos = 20 + (index % 2) * 85;
+        const yCard = yPos + Math.floor(index / 2) * 30;
+        
+        pdf.setDrawColor(229, 231, 235); // #e5e7eb
+        pdf.setLineWidth(0.5);
+        pdf.roundedRect(xPos, yCard, 80, 25, 3, 3);
+        
+        pdf.setFontSize(10);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text(item.label, xPos + 40, yCard + 7, { align: 'center' });
+        
+        pdf.setFontSize(20);
+        pdf.setTextColor(220, 38, 38); // #dc2626
+        pdf.text(item.value.toString(), xPos + 40, yCard + 15, { align: 'center' });
+        
+        pdf.setFontSize(8);
+        pdf.setTextColor(156, 163, 175); // #9ca3af
+        pdf.text(item.subtitle, xPos + 40, yCard + 21, { align: 'center' });
+      });
+      
+      yPos += 70;
+      
+      // Check if we need a new page
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      // Status Overview
+      pdf.setFontSize(16);
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Status Overview', 20, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Workload split across lifecycle stages', 20, yPos);
+      yPos += 15;
+      
+      // Status bars
+      const statusEntries = Object.entries(STATUS_CONFIG);
+      const barWidth = 30;
+      const barSpacing = 20;
+      const maxBarHeight = 40;
+      
+      statusEntries.forEach(([key, config], index) => {
+        const xPos = 20 + index * (barWidth + barSpacing);
+        const barHeight = Math.max((statusCounts[key] / maxStatusValue) * maxBarHeight, 5);
+        
+        // Draw bar
+        pdf.setFillColor(...hexToRgb(config.color));
+        pdf.rect(xPos, yPos + maxBarHeight - barHeight, barWidth, barHeight, 'F');
+        
+        // Draw value
+        pdf.setFontSize(14);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(statusCounts[key].toString(), xPos + barWidth/2, yPos + maxBarHeight + 10, { align: 'center' });
+        
+        // Draw label
+        pdf.setFontSize(9);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text(config.label, xPos + barWidth/2, yPos + maxBarHeight + 16, { align: 'center' });
+      });
+      
+      yPos += 70;
+      
+      // Check if we need a new page
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      // Top Categories
+      pdf.setFontSize(16);
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Top Categories', 20, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Most frequently reported issues', 20, yPos);
+      yPos += 15;
+      
+      categoryDistribution.forEach((category, index) => {
+        const barWidth = (category.value / maxCategoryValue) * 150;
+        
+        // Category label and value
+        pdf.setFontSize(11);
+        pdf.setTextColor(55, 65, 81); // #374151
+        pdf.text(category.label, 20, yPos);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(category.value.toString(), 190, yPos, { align: 'right' });
+        
+        // Progress bar background
+        pdf.setDrawColor(229, 231, 235);
+        pdf.setLineWidth(0.5);
+        pdf.rect(20, yPos + 3, 150, 6);
+        
+        // Progress bar fill
+        pdf.setFillColor(220, 38, 38); // #dc2626
+        pdf.rect(20, yPos + 3, barWidth, 6, 'F');
+        
+        yPos += 15;
+      });
+      
+      yPos += 10;
+      
+      // Check if we need a new page
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      // Urgency Breakdown
+      pdf.setFontSize(16);
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Urgency Breakdown', 20, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('Priority distribution', 20, yPos);
+      yPos += 15;
+      
+      // Urgency bars
+      const urgencyEntries = Object.entries(URGENCY_CONFIG);
+      
+      urgencyEntries.forEach(([key, config], index) => {
+        const xPos = 20 + index * (barWidth + barSpacing);
+        const barHeight = Math.max((urgencyCounts[key] / maxUrgencyValue) * maxBarHeight, 5);
+        
+        // Draw bar
+        pdf.setFillColor(...hexToRgb(config.color));
+        pdf.rect(xPos, yPos + maxBarHeight - barHeight, barWidth, barHeight, 'F');
+        
+        // Draw value
+        pdf.setFontSize(14);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(urgencyCounts[key].toString(), xPos + barWidth/2, yPos + maxBarHeight + 10, { align: 'center' });
+        
+        // Draw label
+        pdf.setFontSize(9);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text(config.label, xPos + barWidth/2, yPos + maxBarHeight + 16, { align: 'center' });
+      });
+      
+      yPos += 70;
+      
+      // Check if we need a new page
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      // Submission Trends
+      pdf.setFontSize(16);
+      pdf.setTextColor(17, 24, 39);
+      pdf.text('Submission Trends', 20, yPos);
+      yPos += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text(`Historical complaint volume over time (${TREND_VIEWS.find(v => v.key === trendRange)?.label})`, 20, yPos);
+      yPos += 15;
+      
+      // Trend bars
+      const trendBarWidth = 15;
+      const trendBarSpacing = 10;
+      const trendMaxBarHeight = 40;
+      
+      selectedTrendSeries.forEach((period, index) => {
+        const xPos = 20 + index * (trendBarWidth + trendBarSpacing);
+        const barHeight = Math.max((period.value / maxTrendValue) * trendMaxBarHeight, 5);
+        
+        // Draw bar
+        pdf.setFillColor(220, 38, 38); // #dc2626
+        pdf.rect(xPos, yPos + trendMaxBarHeight - barHeight, trendBarWidth, barHeight, 'F');
+        
+        // Draw value
+        pdf.setFontSize(10);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(period.value.toString(), xPos + trendBarWidth/2, yPos + trendMaxBarHeight + 8, { align: 'center' });
+        
+        // Draw label
+        pdf.setFontSize(7);
+        pdf.setTextColor(107, 114, 128);
+        const lines = pdf.splitTextToSize(period.label, trendBarWidth + 10);
+        pdf.text(lines, xPos + trendBarWidth/2, yPos + trendMaxBarHeight + 15, { align: 'center' });
+      });
+      
+      yPos += 65;
+      
+      // Trend summary if focused period exists
+      if (focusedTrendPeriod) {
+        if (yPos > 200) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        
+        pdf.setDrawColor(229, 231, 235);
+        pdf.setLineWidth(0.5);
+        pdf.setFillColor(249, 250, 251); // #f9fafb
+        pdf.roundedRect(20, yPos, 170, 30, 3, 3, 'F');
+        pdf.roundedRect(20, yPos, 170, 30, 3, 3);
+        
+        const trendSummaryWidth = 170 / 3;
+        
+        // Period
+        pdf.setFontSize(9);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text('Period', 20 + trendSummaryWidth/2, yPos + 8, { align: 'center' });
+        pdf.setFontSize(14);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(focusedTrendPeriod.label, 20 + trendSummaryWidth/2, yPos + 16, { align: 'center' });
+        
+        // Submissions
+        pdf.setFontSize(9);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text('Submissions', 20 + trendSummaryWidth + trendSummaryWidth/2, yPos + 8, { align: 'center' });
+        pdf.setFontSize(14);
+        pdf.setTextColor(220, 38, 38); // #dc2626
+        pdf.text(focusedTrendPeriod.value.toString(), 20 + trendSummaryWidth + trendSummaryWidth/2, yPos + 16, { align: 'center' });
+        
+        // % of Total
+        pdf.setFontSize(9);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text('% of Total', 20 + 2*trendSummaryWidth + trendSummaryWidth/2, yPos + 8, { align: 'center' });
+        pdf.setFontSize(14);
+        pdf.setTextColor(17, 24, 39);
+        const percentage = totalSelectedTrend > 0 ? Math.round((focusedTrendPeriod.value / totalSelectedTrend) * 100) : 0;
+        pdf.text(`${percentage}%`, 20 + 2*trendSummaryWidth + trendSummaryWidth/2, yPos + 16, { align: 'center' });
+        
+        yPos += 40;
+      }
+      
+      // Trend Summary
+      if (yPos > 220) {
+        pdf.addPage();
+        yPos = 20;
+      }
+      
+      pdf.setFontSize(14);
+      pdf.setTextColor(17, 24, 39);
+      pdf.text(`${TREND_VIEWS.find(v => v.key === trendRange)?.label} Summary`, 20, yPos);
+      yPos += 10;
+      
+      selectedTrendSummary.slice(0, 3).forEach((period, idx) => {
+        // Rank circle
+        const rankColors = ['#f59e0b', '#9ca3af', '#ea580c'];
+        pdf.setFillColor(...hexToRgb(rankColors[idx]));
+        pdf.circle(25, yPos + 4, 4, 'F');
+        
+        pdf.setFontSize(12);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text((idx + 1).toString(), 25, yPos + 6, { align: 'center' });
+        
+        // Period label
+        pdf.setFontSize(10);
+        pdf.setTextColor(55, 65, 81);
+        pdf.text(period.label, 35, yPos + 6);
+        
+        // Period value
+        pdf.setFontSize(12);
+        pdf.setTextColor(17, 24, 39);
+        pdf.text(`${period.value} complaints`, 190, yPos + 6, { align: 'right' });
+        
+        yPos += 15;
+      });
+      
+      // Add page numbers
+      const pageCount = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(107, 114, 128);
+        pdf.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
+      }
+      
+      // Save or open the PDF based on action
+      const fileName = `analytics-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      if (action === 'download') {
+        pdf.save(fileName);
+      } else if (action === 'print') {
+        // For printing, we need to convert PDF to blob and open in new window
+        const pdfBlob = pdf.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const printWindow = window.open(pdfUrl, '_blank');
+        
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+            // Clean up after printing
+            setTimeout(() => {
+              printWindow.close();
+              URL.revokeObjectURL(pdfUrl);
+            }, 1000);
+          };
+        } else {
+          // Fallback to download if window.open fails
+          pdf.save(fileName);
+        }
+      }
+      
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Error generating PDF. Please try again. Make sure jspdf is installed.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   const handleDownload = () => {
-    const element = printRef.current;
-    if (!element) return;
+    generatePDF('download');
+  };
 
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Analytics Report - ${new Date().toLocaleDateString()}</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; padding: 40px; background: white; }
-            .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #dc2626; padding-bottom: 20px; }
-            .header h1 { font-size: 32px; color: #111827; margin-bottom: 10px; }
-            .header p { color: #6b7280; font-size: 14px; }
-            .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
-            .summary-card { border: 2px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center; }
-            .summary-card p { font-size: 12px; color: #6b7280; text-transform: uppercase; margin-bottom: 10px; }
-            .summary-card h3 { font-size: 36px; color: #dc2626; margin-bottom: 5px; }
-            .summary-card span { font-size: 11px; color: #9ca3af; }
-            .section { margin-bottom: 40px; page-break-inside: avoid; }
-            .section-title { font-size: 20px; color: #111827; margin-bottom: 10px; border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; }
-            .section-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 20px; }
-            .chart-container { background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-            .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 200px; gap: 15px; }
-            .bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
-            .bar { width: 60px; border-radius: 4px 4px 0 0; }
-            .bar-value { font-weight: bold; margin-top: 10px; font-size: 18px; }
-            .bar-label { font-size: 12px; color: #6b7280; margin-top: 5px; }
-            .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
-            .category-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
-            .category-label { font-size: 14px; color: #374151; font-weight: 600; }
-            .category-value { font-size: 16px; font-weight: bold; color: #111827; }
-            .trend-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; padding: 20px; background: #f9fafb; border-radius: 8px; }
-            .trend-stat p { font-size: 11px; color: #6b7280; text-transform: uppercase; margin-bottom: 8px; }
-            .trend-stat h4 { font-size: 24px; color: #dc2626; }
-            @media print {
-              body { padding: 20px; }
-              .section { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          ${element.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 250);
+  const handlePrint = () => {
+    generatePDF('print');
   };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-    <AdminSideBar />
-
-    <main className="flex-1 m-5 lg:ml-0 p-8 pb-8 pl-8"> {/* <-- 1. Set main content left padding to pl-0 (or pl-4 if you want a tiny gap) */}
-        <AdminNavbar />
-
-        {/* 2. Change the inner div padding to only control vertical space, and set horizontal padding to 0 */}
-        <div className="py-12 px-0 w-full max-w-full m-0 min-h-screen mb-5 print:p-8"> 
-        {/* ... rest of your analytics component */}
+      <AdminSideBar />
+      
+      <main className="flex-1 lg:ml-0">
+        <AdminNavbar />
+        
+        <div className="p-4 md:p-6 lg:p-8 xl:p-10 pt-24 md:pt-28 lg:pt-32 w-full max-w-full min-h-screen">
           <style>{`
             @media print {
-              .no-print { display: none !important; }
-              .admin-container > *:not(.main-content) { display: none !important; }
-              .main-content > *:not(.p-16) { display: none !important; }
+              body * {
+                visibility: hidden;
+              }
+              .no-print, .no-print * {
+                display: none !important;
+              }
+            }
+            
+            @media (max-width: 768px) {
+              .header-buttons {
+                flex-direction: column;
+                gap: 15px;
+                width: 100%;
+                margin-top: 20px;
+              }
+              .header-buttons button {
+                width: 100%;
+              }
+              .trend-buttons {
+                overflow-x: auto;
+                padding-bottom: 10px;
+                gap: 8px;
+              }
+              .trend-buttons button {
+                white-space: nowrap;
+                flex-shrink: 0;
+              }
+            }
+            
+            @media (max-width: 640px) {
+              .summary-grid {
+                grid-template-columns: 1fr !important;
+              }
+              .charts-grid {
+                grid-template-columns: 1fr !important;
+              }
             }
           `}</style>
 
-          <header className="flex justify-between items-start mb-8 no-print">
-            <div>
-              <p className="text-sm font-bold text-black uppercase tracking-wider mb-2">Insights</p>
-              <h1 className="text-4xl font-extrabold text-black mb-2 drop-shadow-md">Analytics Overview</h1>
-              <p className="text-black/85 text-base">
-                Real-time breakdown of complaint activity across the platform.
-              </p>
-            </div>
-            <div className="flex gap-3 items-center">
-              <p className="text-sm text-black/80 whitespace-nowrap bg-gray-100/15 px-4 py-2 rounded-lg backdrop-blur-sm">
-                Updated {new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-              </p>
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-red-700 to-orange-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Print
-              </button>
-              <button
-                onClick={handleDownload}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-gray-700 to-gray-800 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download
-              </button>
+          {/* Header with improved spacing */}
+          <header className="mb-10 md:mb-12 lg:mb-16 pt-10 md:pt-12 lg:pt-16 no-print">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 lg:gap-0">
+              <div className="space-y-4 lg:space-y-5 lg:max-w-2xl">
+                <div className="pt-6 md:pt-8 lg:pt-10"></div>
+                <div className="space-y-2">
+                  <p className="text-sm md:text-base font-bold text-black uppercase tracking-wider">Insights & Analytics</p>
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-black mb-3 leading-tight">Analytics Overview</h1>
+                  <p className="text-black/85 text-base md:text-lg leading-relaxed">
+                    Comprehensive analysis of complaint activity and platform performance metrics.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Print/Download buttons with more space */}
+              <div className="flex flex-col space-y-4 lg:space-y-6 lg:pl-8 lg:border-l lg:border-gray-200">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5 md:p-6 shadow-sm">
+                  <p className="text-sm md:text-base text-black/80 mb-4 font-medium">Export Options</p>
+                  <div className="flex flex-col space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-black/70">Last Updated</span>
+                      <span className="text-sm font-semibold text-black">
+                        {new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                      <button
+                        onClick={handlePrint}
+                        disabled={isGeneratingPDF}
+                        className={`flex items-center justify-center gap-3 px-5 py-3.5 bg-gradient-to-br from-red-700 to-orange-600 text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] w-full sm:w-auto group ${isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''}`}
+                      >
+                        {isGeneratingPDF ? (
+                          <>
+                            <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-base">Generating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            <span className="text-base">Print Report</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleDownload}
+                        disabled={isGeneratingPDF}
+                        className={`flex items-center justify-center gap-3 px-5 py-3.5 bg-gradient-to-br from-gray-800 to-gray-900 text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] w-full sm:w-auto group ${isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''}`}
+                      >
+                        {isGeneratingPDF ? (
+                          <>
+                            <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-base">Generating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span className="text-base">Download PDF</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </header>
 
-          <div ref={printRef}>
-            <div className="hidden print:block text-center mb-10 border-b-4 border-red-700 pb-5">
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Analytics Report</h1>
-              <p className="text-gray-600 text-sm">Generated on {new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</p>            </div>
+          {error && (
+            <div className="bg-gradient-to-br from-red-100 to-red-200 text-red-700 px-5 py-4 rounded-xl mb-8 text-sm font-medium no-print">
+              {error}
+            </div>
+          )}
 
-            {error && (
-              <div className="bg-gradient-to-br from-red-100 to-red-200 text-red-700 px-5 py-4 rounded-xl mb-8 text-sm font-medium no-print">
-                {error}
-              </div>
-            )}
-
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {/* Main content for web view */}
+          <div className="no-print">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-10">
               {[
                 { label: 'Total Complaints', value: totalComplaints, subtitle: 'All time' },
                 { label: 'Active Queue', value: openComplaints, subtitle: 'Pending + In Progress' },
@@ -407,11 +797,11 @@ const AdminAnalytics = () => {
               ].map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-8 transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden"
+                  className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 md:p-8 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 relative overflow-hidden"
                 >
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-700 to-orange-600"></div>
-                  <p className="text-sm text-gray-500 mb-4 font-semibold uppercase tracking-wide">{item.label}</p>
-                  <h3 className="text-5xl font-extrabold bg-gradient-to-br from-red-800 to-orange-600 bg-clip-text text-transparent mb-2">
+                  <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4 font-semibold uppercase tracking-wide">{item.label}</p>
+                  <h3 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-br from-red-800 to-orange-600 bg-clip-text text-transparent mb-2">
                     {isLoading ? '...' : item.value}
                   </h3>
                   <span className="text-xs text-gray-400 font-medium">{item.subtitle}</span>
@@ -419,44 +809,44 @@ const AdminAnalytics = () => {
               ))}
             </section>
 
-            <section className="bg-white rounded-2xl p-10 mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <header className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-100">
+            <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 mb-6 md:mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <header className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Status Overview</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Status Overview</h2>
                   <p className="text-gray-500 text-sm font-medium">Workload split across lifecycle stages</p>
                 </div>
               </header>
-              <div className="flex items-end justify-around h-80 gap-8 p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl">
+              <div className="flex items-end justify-around h-64 md:h-80 gap-4 md:gap-8 p-4 md:p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl">
                 {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                  <div key={key} className="flex-1 flex flex-col items-center h-full max-w-36">
+                  <div key={key} className="flex-1 flex flex-col items-center h-full max-w-24 md:max-w-36">
                     <div
-                      className="w-full max-w-24 rounded-t-xl transition-all duration-500 min-h-2 relative shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:scale-105"
+                      className="w-full max-w-16 md:max-w-24 rounded-t-xl transition-all duration-500 min-h-2 relative shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105"
                       style={{
                         height: `${(statusCounts[key] / maxStatusValue) * 100}%`,
                         background: config.color,
                       }}
                     >
                       <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-xl"></div>
-                      </div>
-                    <p className="mt-6 text-3xl font-extrabold text-gray-900">{statusCounts[key]}</p>
-                    <p className="mt-2 text-sm font-semibold text-gray-600">{config.label}</p>
+                    </div>
+                    <p className="mt-4 md:mt-6 text-2xl md:text-3xl font-extrabold text-gray-900">{statusCounts[key]}</p>
+                    <p className="mt-1 md:mt-2 text-xs md:text-sm font-semibold text-gray-600">{config.label}</p>
                   </div>
                 ))}
               </div>
             </section>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <section className="bg-white rounded-2xl p-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <header className="mb-8 pb-6 border-b-2 border-gray-100">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Top Categories</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 charts-grid">
+              <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <header className="mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Top Categories</h2>
                   <p className="text-gray-500 text-sm font-medium">Most frequently reported issues</p>
                 </header>
                 <div className="space-y-4">
                   {categoryDistribution.map((category, idx) => (
                     <div key={idx} className="group">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-semibold text-gray-700">{category.label}</span>
-                        <span className="text-lg font-bold text-gray-900">{category.value}</span>
+                        <span className="text-sm font-semibold text-gray-700 truncate pr-2">{category.label}</span>
+                        <span className="text-lg font-bold text-gray-900 whitespace-nowrap">{category.value}</span>
                       </div>
                       <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                         <div
@@ -469,16 +859,16 @@ const AdminAnalytics = () => {
                 </div>
               </section>
 
-              <section className="bg-white rounded-2xl p-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <header className="mb-8 pb-6 border-b-2 border-gray-100">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Urgency Breakdown</h2>
+              <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <header className="mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Urgency Breakdown</h2>
                   <p className="text-gray-500 text-sm font-medium">Priority distribution</p>
                 </header>
-                <div className="flex items-end justify-around h-64 gap-8 p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl">
+                <div className="flex items-end justify-around h-64 gap-4 md:gap-8 p-4 md:p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl">
                   {Object.entries(URGENCY_CONFIG).map(([key, config]) => (
-                    <div key={key} className="flex-1 flex flex-col items-center h-full max-w-32">
+                    <div key={key} className="flex-1 flex flex-col items-center h-full max-w-24 md:max-w-32">
                       <div
-                        className="w-full max-w-20 rounded-t-xl transition-all duration-500 min-h-2 relative shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:scale-105"
+                        className="w-full max-w-14 md:max-w-20 rounded-t-xl transition-all duration-500 min-h-2 relative shadow-lg hover:shadow-xl hover:-translate-y-2 hover:scale-105"
                         style={{
                           height: `${(urgencyCounts[key] / maxUrgencyValue) * 100}%`,
                           background: config.color,
@@ -486,28 +876,28 @@ const AdminAnalytics = () => {
                       >
                         <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-xl"></div>
                       </div>
-                      <p className="mt-6 text-3xl font-extrabold text-gray-900">{urgencyCounts[key]}</p>
-                      <p className="mt-2 text-sm font-semibold text-gray-600">{config.label}</p>
+                      <p className="mt-4 md:mt-6 text-2xl md:text-3xl font-extrabold text-gray-900">{urgencyCounts[key]}</p>
+                      <p className="mt-1 md:mt-2 text-xs md:text-sm font-semibold text-gray-600">{config.label}</p>
                     </div>
                   ))}
                 </div>
               </section>
             </div>
 
-            <section className="bg-white rounded-2xl p-10 mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <header className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-100">
+            <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <header className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Submission Trends</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Submission Trends</h2>
                   <p className="text-gray-500 text-sm font-medium">
                     Historical complaint volume over time
                   </p>
                 </div>
-                <div className="flex gap-2 no-print">
+                <div className="flex gap-2 no-print trend-buttons">
                   {TREND_VIEWS.map((view) => (
                     <button
                       key={view.key}
                       onClick={() => setTrendRange(view.key)}
-                      className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                      className={`px-3 md:px-4 py-2 rounded-lg font-semibold text-xs md:text-sm transition-all duration-300 ${
                         trendRange === view.key
                           ? 'bg-gradient-to-br from-red-700 to-orange-600 text-white shadow-md'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -519,7 +909,7 @@ const AdminAnalytics = () => {
                 </div>
               </header>
 
-              <div className="flex items-end justify-around h-80 gap-4 p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl mb-6">
+              <div className="flex items-end justify-around h-64 md:h-80 gap-3 md:gap-4 p-4 md:p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl mb-6">
                 {selectedTrendSeries.map((period) => (
                   <div
                     key={period.key}
@@ -529,7 +919,7 @@ const AdminAnalytics = () => {
                     <div
                       className={`w-full rounded-t-xl transition-all duration-500 min-h-2 relative ${
                         activeTrendPeriod === period.key
-                          ? 'bg-gradient-to-t from-red-700 to-orange-500 shadow-2xl scale-105'
+                          ? 'bg-gradient-to-t from-red-700 to-orange-500 shadow-xl scale-105'
                           : 'bg-gradient-to-t from-red-600 to-orange-600 shadow-lg group-hover:shadow-xl group-hover:-translate-y-2'
                       }`}
                       style={{
@@ -538,30 +928,30 @@ const AdminAnalytics = () => {
                     >
                       <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-xl"></div>
                     </div>
-                    <p className={`mt-4 text-2xl font-extrabold transition-colors ${
+                    <p className={`mt-3 md:mt-4 text-xl md:text-2xl font-extrabold transition-colors ${
                       activeTrendPeriod === period.key ? 'text-red-700' : 'text-gray-900'
                     }`}>
                       {period.value}
                     </p>
-                    <p className="mt-2 text-xs font-semibold text-gray-500 text-center">{period.label}</p>
+                    <p className="mt-1 md:mt-2 text-xs font-semibold text-gray-500 text-center leading-tight">{period.label}</p>
                   </div>
                 ))}
               </div>
 
               {focusedTrendPeriod && (
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 mb-6">
-                  <div className="grid grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 md:p-6 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Period</p>
-                      <h4 className="text-2xl font-bold text-gray-900">{focusedTrendPeriod.label}</h4>
+                      <h4 className="text-xl md:text-2xl font-bold text-gray-900 truncate">{focusedTrendPeriod.label}</h4>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">Submissions</p>
-                      <h4 className="text-2xl font-bold text-red-700">{focusedTrendPeriod.value}</h4>
+                      <h4 className="text-xl md:text-2xl font-bold text-red-700">{focusedTrendPeriod.value}</h4>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">% of Total</p>
-                      <h4 className="text-2xl font-bold text-gray-900">
+                      <h4 className="text-xl md:text-2xl font-bold text-gray-900">
                         {totalSelectedTrend > 0
                           ? Math.round((focusedTrendPeriod.value / totalSelectedTrend) * 100)
                           : 0}%
@@ -571,22 +961,22 @@ const AdminAnalytics = () => {
                 </div>
               )}
 
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 md:p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-3 md:mb-4">
                   {TREND_VIEWS.find((v) => v.key === trendRange)?.label} Summary
                 </h3>
                 <div className="space-y-3">
                   {selectedTrendSummary.slice(0, 3).map((period, idx) => (
                     <div key={period.key} className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
-                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                        <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white font-bold text-xs md:text-sm ${
                           idx === 0 ? 'bg-yellow-500' : idx === 1 ? 'bg-gray-400' : 'bg-orange-600'
                         }`}>
                           {idx + 1}
                         </span>
-                        <span className="text-sm font-semibold text-gray-700">{period.label}</span>
+                        <span className="text-sm font-semibold text-gray-700 truncate">{period.label}</span>
                       </div>
-                      <span className="text-lg font-bold text-gray-900">{period.value} complaints</span>
+                      <span className="text-base md:text-lg font-bold text-gray-900 whitespace-nowrap">{period.value} complaints</span>
                     </div>
                   ))}
                 </div>
