@@ -655,14 +655,16 @@ const AdminAnalytics = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50" style={{ fontFamily: "'Poppins', sans-serif" }}>
       <AdminSideBar />
       
       <main className="flex-1 lg:ml-0">
         <AdminNavbar />
         
-        <div className="p-4 md:p-6 lg:p-8 xl:p-10 pt-24 md:pt-28 lg:pt-32 w-full max-w-full min-h-screen">
+        <div className="p-4 md:p-6 lg:p-8 xl:p-10 pt-24 ml-6 mt-[100px] lg:pt-32 w-full max-w-[1200px] min-h-screen">
           <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+            
             @media print {
               body * {
                 visibility: hidden;
@@ -675,9 +677,9 @@ const AdminAnalytics = () => {
             @media (max-width: 768px) {
               .header-buttons {
                 flex-direction: column;
-                gap: 15px;
+                gap: 12px;
                 width: 100%;
-                margin-top: 20px;
+                margin-top: 16px;
               }
               .header-buttons button {
                 width: 100%;
@@ -703,85 +705,72 @@ const AdminAnalytics = () => {
             }
           `}</style>
 
-          {/* Header with improved spacing */}
-          <header className="mb-10 md:mb-12 lg:mb-16 pt-10 md:pt-12 lg:pt-16 no-print">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 lg:gap-0">
-              <div className="space-y-4 lg:space-y-5 lg:max-w-2xl">
-                <div className="pt-6 md:pt-8 lg:pt-10"></div>
-                <div className="space-y-2">
-                  <p className="text-sm md:text-base font-bold text-black uppercase tracking-wider">Insights & Analytics</p>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-black mb-3 leading-tight">Analytics Overview</h1>
-                  <p className="text-black/85 text-base md:text-lg leading-relaxed">
-                    Comprehensive analysis of complaint activity and platform performance metrics.
-                  </p>
-                </div>
+          {/* Header - Redesigned */}
+          <header className="mb-8 md:mb-5 lg:mb-8 no-print">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="space-y-2">
+                <p className="text-gray-500 text-sm md:text-base leading-relaxed max-w-2xl">
+                  Analysis of complaint activity and platform performance metrics.
+                </p>
               </div>
               
-              {/* Print/Download buttons with more space */}
-              <div className="flex flex-col space-y-4 lg:space-y-6 lg:pl-8 lg:border-l lg:border-gray-200">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-5 md:p-6 shadow-sm">
-                  <p className="text-sm md:text-base text-black/80 mb-4 font-medium">Export Options</p>
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/70">Last Updated</span>
-                      <span className="text-sm font-semibold text-black">
-                        {new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                      <button
-                        onClick={handlePrint}
-                        disabled={isGeneratingPDF}
-                        className={`flex items-center justify-center gap-3 px-5 py-3.5 bg-gradient-to-br from-red-700 to-orange-600 text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] w-full sm:w-auto group ${isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''}`}
-                      >
-                        {isGeneratingPDF ? (
-                          <>
-                            <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span className="text-base">Generating...</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                            </svg>
-                            <span className="text-base">Print Report</span>
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={handleDownload}
-                        disabled={isGeneratingPDF}
-                        className={`flex items-center justify-center gap-3 px-5 py-3.5 bg-gradient-to-br from-gray-800 to-gray-900 text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] w-full sm:w-auto group ${isGeneratingPDF ? 'opacity-75 cursor-not-allowed' : ''}`}
-                      >
-                        {isGeneratingPDF ? (
-                          <>
-                            <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span className="text-base">Generating...</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                            </svg>
-                            <span className="text-base">Download PDF</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              {/* Redesigned Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 lg:ml-4">
+                <button
+                  onClick={handlePrint}
+                  disabled={isGeneratingPDF}
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-300 text-gray-700 
+                    font-medium text-sm rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow ${isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isGeneratingPDF ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 
+                        12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 
+                        2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      <span>Print</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleDownload}
+                  disabled={isGeneratingPDF}
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 bg-[#8B0000] text-white font-medium text-sm 
+                    rounded-lg hover:bg-maroon-400 transition-all duration-200 shadow-sm hover:shadow ${isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isGeneratingPDF ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 
+                        12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      <span>Download PDF</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </header>
 
           {error && (
-            <div className="bg-gradient-to-br from-red-100 to-red-200 text-red-700 px-5 py-4 rounded-xl mb-8 text-sm font-medium no-print">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm font-medium no-print">
               {error}
             </div>
           )}
@@ -812,7 +801,7 @@ const AdminAnalytics = () => {
             <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 mb-6 md:mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <header className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Status Overview</h2>
+                  <h2 className="text-2xl md:text-2xl font-bold text-gray-900 mb-2">Status Overview</h2>
                   <p className="text-gray-500 text-sm font-medium">Workload split across lifecycle stages</p>
                 </div>
               </header>
@@ -838,7 +827,7 @@ const AdminAnalytics = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6 md:mb-8 charts-grid">
               <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <header className="mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Top Categories</h2>
+                  <h2 className="text-2xl md:text-2xl font-bold text-gray-900 mb-2">Top Categories</h2>
                   <p className="text-gray-500 text-sm font-medium">Most frequently reported issues</p>
                 </header>
                 <div className="space-y-4">
@@ -861,7 +850,7 @@ const AdminAnalytics = () => {
 
               <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <header className="mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Urgency Breakdown</h2>
+                  <h2 className="text-2xl md:text-2xl font-bold text-gray-900 mb-2">Urgency Breakdown</h2>
                   <p className="text-gray-500 text-sm font-medium">Priority distribution</p>
                 </header>
                 <div className="flex items-end justify-around h-64 gap-4 md:gap-8 p-4 md:p-8 bg-gradient-to-b from-gray-50 to-white rounded-xl">
@@ -887,7 +876,7 @@ const AdminAnalytics = () => {
             <section className="bg-white rounded-2xl p-6 md:p-8 lg:p-10 mb-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <header className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-6 md:mb-8 pb-6 border-b-2 border-gray-100">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Submission Trends</h2>
+                  <h2 className="text-2xl md:text-1xl font-bold text-gray-900 mb-2">Submission Trends</h2>
                   <p className="text-gray-500 text-sm font-medium">
                     Historical complaint volume over time
                   </p>
