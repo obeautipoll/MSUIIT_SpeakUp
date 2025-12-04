@@ -187,11 +187,7 @@ const FileComplaint = () => {
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Attach Proof File (Optional)</label>
-          <input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3" />
-          <small>Supported formats: pdf, jpg, png, mp4, mp3</small>
-        </div>
+        
 
         <div className="form-group checkbox-group">
           <label className="checkbox-label">
@@ -304,11 +300,7 @@ const FileComplaint = () => {
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Attach Proof File (Optional)</label>
-          <input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.mp4,.mp3" />
-          <small>Supported formats: pdf, jpg, png, mp4, mp3</small>
-        </div>
+        
 
         <div className="form-group checkbox-group">
           <label className="checkbox-label">
@@ -401,11 +393,6 @@ const FileComplaint = () => {
           </div>
         </div>
 
-        <div className="form-group">
-          <label>Photo / Video Upload (Optional)</label>
-          <input type="file" name="attachment" accept=".jpg,.jpeg,.png,.mp4,.pdf" />
-          <small>Supported formats: jpg, png, mp4, pdf</small>
-        </div>
 
         <div className="form-group checkbox-group">
           <label className="checkbox-label">
