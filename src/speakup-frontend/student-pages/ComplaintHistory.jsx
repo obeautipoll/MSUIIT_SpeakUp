@@ -560,28 +560,28 @@ const ComplaintHistory = () => {
                 <tr className="bg-gray-50/80 border-b border-gray-200">
                   {/* --- MODIFIED TABLE HEADERS --- */}
                   <th className="
-                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[40%]
-                    sm:px-6 sm:py-4 sm:text-sm // Revert to larger size on sm/md screens
+                    px-3 py-3 text-[12px] font-semibold text-gray-400 uppercase tracking-wider w-[40%]
+                    sm:px-6 sm:py-4 sm:text-[12px] // Revert to larger size on sm/md screens
                   ">Complaint</th>
                   
                   <th className="
-                    px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[20%]
-                    sm:px-6 sm:py-4 sm:text-sm
+                    px-3 py-3 text-[12px] font-semibold text-gray-400 uppercase tracking-wider w-[20%]
+                    sm:px-6 sm:py-4 sm:text-[12px]
                   ">Category</th>
                   
                   <th className="
                     px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[15%]
-                    sm:px-6 sm:py-4 sm:text-sm
+                    sm:px-6 sm:py-4 sm:text-[11px]
                   ">Date Filed</th>
                   
                   <th className="
                     px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-[15%]
-                    sm:px-6 sm:py-4 sm:text-sm
+                    sm:px-6 sm:py-4 sm:text-[11px]
                   ">Status</th>
                   
                   <th className="
                     px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right w-[10%]
-                    sm:px-6 sm:py-4 sm:text-sm
+                    sm:px-6 sm:py-4 sm:text-[11px]
                   ">Actions</th>
                   {/* ----------------------------- */}
                 </tr>
@@ -592,7 +592,7 @@ const ComplaintHistory = () => {
                     ) : complaints.length === 0 ? (
                       <tr>
                         <td colSpan="5" className="px-6 py-16 text-center">
-                          <p className="text-gray-900 font-medium text-sm">No complaints found</p>
+                          <p className="text-gray-900 font-xs text-[12.5px]">No complaints found</p>
                         </td>
                       </tr>
                     ) : (
@@ -600,20 +600,20 @@ const ComplaintHistory = () => {
                         <tr key={c.id} className="hover:bg-gray-50 transition-colors duration-150 group">
                           <td className="px-6 py-4 align-middle">
                             {/* Changed text-xs to text-sm */}
-                            <div className="text-sm font-medium text-gray-900 line-clamp-2 leading-relaxed max-w-md" title={getDescription(c)}>
+                            <div className="text-[12.5px] font-medium text-gray-900 line-clamp-2 leading-relaxed max-w-md" title={getDescription(c)}>
                               {getDescription(c)}
                             </div>
                           </td>
                           <td className="px-6 py-4 align-middle">
                             {/* Changed text-xs to text-sm */}
-                            <span className="text-sm text-gray-700">{getCategoryLabel(c.category)}</span>
+                            <span className="text-[12.5px] text-gray-700">{getCategoryLabel(c.category)}</span>
                           </td>
-                          <td className="px-6 py-4 align-middle text-sm text-gray-600">
+                          <td className="px-6 py-4 align-middle text-[12.5px] text-gray-600">
                             {formatDate(c.submissionDate)}
                           </td>
                           <td className="px-6 py-4 align-middle">
                             {/* Bumped badge size from 10px to text-xs (12px) */}
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${getStatusClasses(c.status)}`}>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide shadow-sm ${getStatusClasses(c.status)}`}>
                               <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 opacity-70"></span>
                               {c.status || "Pending"}
                             </span>
@@ -622,10 +622,10 @@ const ComplaintHistory = () => {
                             <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => { setSelectedComplaint(c); setActiveTab("details"); }}
-                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#800020] hover:bg-red-50 transition-colors rounded"
+                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[#800020] hover:bg-red-50 bg-gray-70 transition-colors rounded"
                                 title="View Details"
                               >
-                                <i className="fas fa-eye text-sm"></i>
+                                <i className="fas fa-eye text-sm text-gray-600"></i>
                               </button>
                               <button
                                 onClick={() => handleDelete(c.id)}
@@ -661,7 +661,7 @@ const ComplaintHistory = () => {
               <div className="bg-white px-6 py-4 border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Complaint Details</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">ID: {selectedComplaint.id}</p>
+                  <p className="text-[9px] text-gray-500 mt-0.5">ID: {selectedComplaint.id}</p>
                 </div>
                 <div className="flex gap-2">
                    <div className="flex bg-gray-100 rounded-lg p-1">
